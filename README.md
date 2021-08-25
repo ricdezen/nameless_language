@@ -5,4 +5,4 @@ repository is the code for my version of Lox, which is just the one in the book 
 
 I will take inspiration from the book's exercises to further develop the language, until it becomes worthy of a name.
 
-Reached chapter 14.3.1
+Reached chapter 14.4

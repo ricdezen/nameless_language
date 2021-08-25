@@ -20,6 +20,13 @@
 #define GROW_ARRAY(type, pointer, oldCount, newCount) \
     (type*)reallocate(pointer, sizeof(type) * (oldCount), sizeof(type) * (newCount))
 
+/**
+ * @param type The type of data. Used to get the size of the array.
+ * @param pointer The pointer to the memory area.
+ * @param oldCount The number of elements previously contained in the array.
+ */
+#define FREE_ARRAY(type, pointer, oldCount) reallocate(pointer, sizeof(type) * (oldCount), 0)
+
 
 /**
  * Function to reallocate a dynamic memory block.

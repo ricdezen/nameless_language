@@ -28,6 +28,13 @@ typedef struct {
 void initChunk(Chunk *chunk);
 
 /**
+ * Dispose of a chunk.
+ *
+ * @param chunk The chunk to free.
+ */
+void freeChunk(Chunk *chunk);
+
+/**
  * Append a byte at the end of a chunk, resizing its capacity if necessary.
  *
  *
