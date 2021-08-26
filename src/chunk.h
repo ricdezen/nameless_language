@@ -10,7 +10,12 @@
  */
 typedef enum {
     OP_CONSTANT,    // Fetch a constant's value. One byte param: the index of the constant.
-    OP_RETURN,
+    OP_ADD,         // (+) Pops the last two values from the stack and pushes the result.
+    OP_SUBTRACT,    // (-) Pops the last two values from the stack and pushes the result.
+    OP_MULTIPLY,    // (*) Pops the last two values from the stack and pushes the result.
+    OP_DIVIDE,      // (/) Pops the last two values from the stack and pushes the result.
+    OP_NEGATE,      // Replace the value at the top of the stack with its negation.
+    OP_RETURN,      // Pop the value at the top of the stack.
 } OpCode;
 
 /**

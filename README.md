@@ -8,7 +8,7 @@ I already read the whole book. I found it very interesting. I am planning to try
 language. It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn
 things.
 
-Reached chapter 15.3
+Reached chapter 16
 
 **TO-DO**
 
@@ -58,6 +58,8 @@ Book exercises:
 - Implement [run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding) of line numbers.
 
 - Implement another (or another two) instruction to load more than 255 constants.
+
+- Implement a stack on a dynamic array for the value stack.
 
 My own:
 
