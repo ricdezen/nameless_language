@@ -30,12 +30,12 @@ void initVM();
 void freeVM();
 
 /**
- * Interpret a chunk of bytecode.
+ * Interpret source code from a character buffer.
  *
- * @param chunk The target chunk.
+ * @param source Target source code.
  * @return The result.
  */
-InterpretResult interpret(Chunk *chunk);
+InterpretResult interpret(const char *source);
 
 /**
  * Push a value at the top of a vm.

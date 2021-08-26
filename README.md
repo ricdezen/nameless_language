@@ -8,7 +8,7 @@ I already read the whole book. I found it very interesting. I am planning to try
 language. It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn
 things.
 
-Reached chapter 16
+Reached chapter 17
 
 **TO-DO**
 
@@ -65,3 +65,13 @@ My own:
 
 - Change the virtual machine from a global to something that can be created and passed around. This implies modifying
   every method that references `vm` to take a `VM`-type argument.
+
+- Same for the Scanner.
+
+- Change Strings to behave more like other languages. Look into UTF-8 and escape sequences.
+
+- After fixing strings, add non-escape (raw strings) and string interpolation (Python's format strings).
+
+- Other famous operators: `>>`, `<<`, `**`, `++`, `--`, `//`, `+=`, `-=`, `*=`, `/=`.
+
+- There are various TODO in the code, which do not represent features, mostly stuff that needs to be fixed.
