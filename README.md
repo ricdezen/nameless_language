@@ -45,7 +45,7 @@ Book exercises:
 
 - Extend string concatenation to implicitly convert the other operand to a string and concatenate.
 
-- Handle error handling for division by 0.
+- Add error handling for division by 0.
 
 - Add back support in the REPL for expressions (expression statements basically, which do nothing in the code).
 
