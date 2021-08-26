@@ -5,9 +5,11 @@ repository is the code for my version of Lox, which is just the one in the book 
 
 I will take inspiration from the book's exercises to further develop the language, until it becomes worthy of a name.
 
-Reached 15
+Reached chapter 15.3
 
-**TO-DO**: Mainly the exercises at the end of each chapter. My own ideas will come later.
+**TO-DO**
+
+Book exercises:
 
 - Add support for comment blocks. Does it make sense to allow nesting? I would say yes. My comment may have some code
   snippet which could be further commented.
@@ -53,3 +55,8 @@ Reached 15
 - Implement [run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding) of line numbers.
 
 - Implement another (or another two) instruction to load more than 255 constants.
+
+My own:
+
+- Change the virtual machine from a global to something that can be created and passed around. This implies modifying
+  every method that references `vm` to take a `VM`-type argument.
