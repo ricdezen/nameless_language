@@ -8,7 +8,7 @@ I already read the whole book. I found it very interesting. I am planning to try
 language. It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn
 things.
 
-Reached chapter 17
+Reached chapter 17.4
 
 **TO-DO**
 
@@ -67,6 +67,8 @@ My own:
   every method that references `vm` to take a `VM`-type argument.
 
 - Same for the Scanner.
+
+- Same for the Parser (and the concept of "current chunk" can probably be added to the parser).
 
 - Change Strings to behave more like other languages. Look into UTF-8 and escape sequences.
 
