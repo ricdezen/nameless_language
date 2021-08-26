@@ -4,9 +4,8 @@ I am currently reading a very nice book called [Crafting Interpreters](https://c
 repository is the code for my version of *clox*, which is going to initially be just the one in the book but commented
 by me as I go.
 
-I already read the whole book. I found it very interesting. I am planning to try to implement a full-featured
-language. It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn
-things.
+I already read the whole book. I found it very interesting. I am planning to try to implement a full-featured language.
+It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn things.
 
 Reached chapter 17.4
 
@@ -74,6 +73,6 @@ My own:
 
 - After fixing strings, add non-escape (raw strings) and string interpolation (Python's format strings).
 
-- Other famous operators: `>>`, `<<`, `**`, `++`, `--`, `//`, `+=`, `-=`, `*=`, `/=`.
+- Other famous operators: `>>`, `<<`, `**`, `++`, `--`, `//`, `+=`, `-=`, `*=`, `/=`, `[]`, `()`.
 
 - There are various TODO in the code, which do not represent features, mostly stuff that needs to be fixed.
