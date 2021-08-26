@@ -4,7 +4,7 @@ I am currently reading a very nice book called [Crafting Interpreters](https://c
 repository is the code for my version of *clox*, which is going to initially be just the one in the book but commented
 by me as I go.
 
-I already read the whole book. I found it very interesting. I am planning to try to implement a fully functional
+I already read the whole book. I found it very interesting. I am planning to try to implement a full-featured
 language. It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn
 things.
 
