@@ -13,8 +13,9 @@ Reached chapter 17.4
 
 Book exercises:
 
-- Add support for comment blocks. Does it make sense to allow nesting? I would say yes. My comment may have some code
-  snippet which could be further commented.
+- Add support for comment blocks. Does it make sense to allow nesting? ~~I would say yes. My comment may have some code
+  snippet which could be further commented.~~ That is not my business, unless I explicitly support markdown for my
+  docstring equivalent. It makes more sense not to allow nesting. C does not, I believe Java did? Mmh.
 
 - Remove semicolons (except for loop, I guess).
     - Step 1: Just remove the terminator. End of line means end of instruction.
