@@ -1,9 +1,12 @@
 # Nameless Language
 
 I am currently reading a very nice book called [Crafting Interpreters](https://craftinginterpreters.com/). In this
-repository is the code for my version of Lox, which is just the one in the book but commented by me as I go.
+repository is the code for my version of *clox*, which is going to initially be just the one in the book but commented
+by me as I go.
 
-I will take inspiration from the book's exercises to further develop the language, until it becomes worthy of a name.
+I already read the whole book. I found it very interesting. I am planning to try to implement a fully functional
+language. It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn
+things.
 
 Reached chapter 15.3
 
