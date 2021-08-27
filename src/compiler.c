@@ -329,6 +329,19 @@ static void number() {
 }
 
 /**
+ * Parse a string.
+ */
+static void string() {
+
+#ifdef DEBUG_PRINT_PARSE_STACK
+    PRINT_TABS();
+    printToken(&parser.previous);
+#endif
+
+    emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
+}
+
+/**
  * Compile an unary operator.
  */
 static void unary() {
@@ -381,7 +394,7 @@ ParseRule rules[] = {
         [TOKEN_LESS]          = {NULL, binary, PRECEDENCE_COMPARISON},
         [TOKEN_LESS_EQUAL]    = {NULL, binary, PRECEDENCE_COMPARISON},
         [TOKEN_IDENTIFIER]    = {NULL, NULL, PRECEDENCE_NONE},
-        [TOKEN_STRING]        = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_STRING]        = {string, NULL, PRECEDENCE_NONE},
         [TOKEN_NUMBER]        = {number, NULL, PRECEDENCE_NONE},
         [TOKEN_AND]           = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_CLASS]         = {NULL, NULL, PRECEDENCE_NONE},

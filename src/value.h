@@ -3,6 +3,10 @@
 
 #include "common.h"
 
+// Just typedef the struct for ease of use.
+typedef struct Obj Obj;
+typedef struct ObjString ObjString;
+
 /**
  * Type of Value.
  */
@@ -10,6 +14,7 @@ typedef enum {
     VAL_BOOL,
     VAL_NIL,
     VAL_NUMBER,
+    VAL_OBJ
 } ValueType;
 
 /**
@@ -20,6 +25,7 @@ typedef struct {
     union {
         bool boolean;
         double number;
+        Obj *obj;
     } as;
 } Value;
 
@@ -39,16 +45,24 @@ typedef struct {
 #define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = (value)}})
 
 /**
- * Cast value to bool. If you do this unsafely, you may open a portal to the shadow realm. Check the type with the
- * other macros.
+ * Create Value from an object.
+ */
+#define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)(object)}})
+
+/**
+ * Cast Value to bool. If you do this unsafely, you may open a portal to the shadow realm. Check the type before.
  */
 #define AS_BOOL(value)    ((value).as.boolean)
 
 /**
- * Cast value to number. If you do this unsafely, you may end up on the naughty list. Check the type with the other
- * macros.
+ * Cast Value to number. If you do this unsafely, you may end up on the naughty list. Check the type before.
  */
 #define AS_NUMBER(value)  ((value).as.number)
+
+/**
+ * Cast Value to Object. If you do this unsafely, thou shalt be damned. Check the type before.
+ */
+#define AS_OBJ(value)     ((value).as.obj)
 
 /**
  * Three macros for Value type checking. In case you have not read so yet, If you do not use these before a AS_X call,
@@ -58,6 +72,7 @@ typedef struct {
 #define IS_BOOL(value)    ((value).type == VAL_BOOL)
 #define IS_NIL(value)     ((value).type == VAL_NIL)
 #define IS_NUMBER(value)  ((value).type == VAL_NUMBER)
+#define IS_OBJ(value)     ((value).type == VAL_OBJ)
 
 /**
  * Just like a Chunk. C has no generics. Shame.

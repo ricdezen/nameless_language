@@ -4,6 +4,14 @@
 #include "common.h"
 
 /**
+ * Macro to allocate memory for an array of values (and cast the pointer to some type).
+ *
+ * @param type The type to cast the pointer to.
+ * @param count How many values.
+ */
+#define ALLOCATE(type, count) (type*)reallocate(NULL, 0, sizeof(type) * (count))
+
+/**
  * Macro aimed to increase an array's size.
  * Arrays start at a minimum size of 8 and then it gets doubled every time.
  *
