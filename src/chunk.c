@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "chunk.h"
 #include "memory.h"
@@ -15,7 +16,7 @@ void freeChunk(Chunk *chunk) {
     FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
     FREE_ARRAY(int, chunk->lines, chunk->capacity);
     freeValueArray(&chunk->constants);
-    initChunk(chunk); // Simply used to recycle the chunk.
+    initChunk(chunk); // Reset chunk to initial state.
 }
 
 void writeChunk(Chunk *chunk, uint8_t byte, int line) {

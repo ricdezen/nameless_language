@@ -2,6 +2,7 @@
 #define NAMELESS_DEBUG_H
 
 #include "chunk.h"
+#include "scanner.h"
 
 /**
  * Print chunk in a human readable format.
@@ -19,5 +20,12 @@ void disassembleChunk(Chunk *chunk, const char *name);
  * @return The next instruction.
  */
 int disassembleInstruction(Chunk *chunk, int offset);
+
+/**
+ * Prints the token's type and value.
+ *
+ * @param token The token to print.
+ */
+void printToken(Token *token);
 
 #endif

@@ -25,17 +25,17 @@ typedef struct {
  * Precedences for the operators.
  */
 typedef enum {
-    PREC_NONE,
-    PREC_ASSIGNMENT,  // =
-    PREC_OR,          // or
-    PREC_AND,         // and
-    PREC_EQUALITY,    // == !=
-    PREC_COMPARISON,  // < > <= >=
-    PREC_TERM,        // + -
-    PREC_FACTOR,      // * /
-    PREC_UNARY,       // ! -
-    PREC_CALL,        // . ()
-    PREC_PRIMARY
+    PRECEDENCE_NONE,
+    PRECEDENCE_ASSIGNMENT,  // =
+    PRECEDENCE_OR,          // or
+    PRECEDENCE_AND,         // and
+    PRECEDENCE_EQUALITY,    // == !=
+    PRECEDENCE_COMPARISON,  // < > <= >=
+    PRECEDENCE_TERM,        // + -
+    PRECEDENCE_FACTOR,      // * /
+    PRECEDENCE_UNARY,       // ! -
+    PRECEDENCE_CALL,        // . ()
+    PRECEDENCE_PRIMARY
 } Precedence;
 
 typedef void (*ParseFn)();
@@ -180,7 +180,8 @@ static uint8_t makeConstant(Value value) {
  * @param value The value to emit.
  */
 static void emitConstant(Value value) {
-    emitTwoBytes(OP_CONSTANT, makeConstant(value));
+    uint8_t constant = makeConstant(value);
+    emitTwoBytes(OP_CONSTANT, constant);
 }
 
 /**
@@ -209,6 +210,10 @@ static void parsePrecedence(Precedence precedence);
  * Parse a binary expression. Calls on the rule table to determine how to parse the terms.
  */
 static void binary() {
+#ifdef DEBUG_PRINT_PARSE_STACK
+    printf("BINARY: ");
+    printToken(&parser.previous);
+#endif
     TokenType operatorType = parser.previous.type;
     ParseRule *rule = getRule(operatorType);
     parsePrecedence((Precedence) (rule->precedence + 1));
@@ -235,14 +240,23 @@ static void binary() {
  * Parse a grouping.
  */
 static void grouping() {
+#ifdef DEBUG_PRINT_PARSE_STACK
+    printf("GROUPING START (\n");
+#endif
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+#ifdef DEBUG_PRINT_PARSE_STACK
+    printf(") GROUPING END\n");
+#endif
 }
 
 /**
  * Parse a number.
  */
 static void number() {
+#ifdef DEBUG_PRINT_PARSE_STACK
+    printToken(&parser.previous);
+#endif
     double value = strtod(parser.previous.start, NULL);
     emitConstant(value);
 }
@@ -251,10 +265,14 @@ static void number() {
  * Compile an unary operator.
  */
 static void unary() {
+#ifdef DEBUG_PRINT_PARSE_STACK
+    printf("UNARY: ");
+    printToken(&parser.previous);
+#endif
     TokenType operatorType = parser.previous.type;
 
     // Compile the operand.
-    parsePrecedence(PREC_UNARY);
+    parsePrecedence(PRECEDENCE_UNARY);
 
     // Emit the operator instruction.
     switch (operatorType) {
@@ -270,55 +288,57 @@ static void unary() {
  * Rules for the various tokens.
  */
 ParseRule rules[] = {
-        [TOKEN_LEFT_PAREN]    = {grouping, NULL, PREC_NONE},
-        [TOKEN_RIGHT_PAREN]   = {NULL, NULL, PREC_NONE},
-        [TOKEN_LEFT_BRACE]    = {NULL, NULL, PREC_NONE},
-        [TOKEN_RIGHT_BRACE]   = {NULL, NULL, PREC_NONE},
-        [TOKEN_COMMA]         = {NULL, NULL, PREC_NONE},
-        [TOKEN_DOT]           = {NULL, NULL, PREC_NONE},
-        [TOKEN_MINUS]         = {unary, binary, PREC_TERM},
-        [TOKEN_PLUS]          = {NULL, binary, PREC_TERM},
-        [TOKEN_SEMICOLON]     = {NULL, NULL, PREC_NONE},
-        [TOKEN_SLASH]         = {NULL, binary, PREC_FACTOR},
-        [TOKEN_STAR]          = {NULL, binary, PREC_FACTOR},
-        [TOKEN_BANG]          = {NULL, NULL, PREC_NONE},
-        [TOKEN_BANG_EQUAL]    = {NULL, NULL, PREC_NONE},
-        [TOKEN_EQUAL]         = {NULL, NULL, PREC_NONE},
-        [TOKEN_EQUAL_EQUAL]   = {NULL, NULL, PREC_NONE},
-        [TOKEN_GREATER]       = {NULL, NULL, PREC_NONE},
-        [TOKEN_GREATER_EQUAL] = {NULL, NULL, PREC_NONE},
-        [TOKEN_LESS]          = {NULL, NULL, PREC_NONE},
-        [TOKEN_LESS_EQUAL]    = {NULL, NULL, PREC_NONE},
-        [TOKEN_IDENTIFIER]    = {NULL, NULL, PREC_NONE},
-        [TOKEN_STRING]        = {NULL, NULL, PREC_NONE},
-        [TOKEN_NUMBER]        = {number, NULL, PREC_NONE},
-        [TOKEN_AND]           = {NULL, NULL, PREC_NONE},
-        [TOKEN_CLASS]         = {NULL, NULL, PREC_NONE},
-        [TOKEN_ELSE]          = {NULL, NULL, PREC_NONE},
-        [TOKEN_FALSE]         = {NULL, NULL, PREC_NONE},
-        [TOKEN_FOR]           = {NULL, NULL, PREC_NONE},
-        [TOKEN_FUN]           = {NULL, NULL, PREC_NONE},
-        [TOKEN_IF]            = {NULL, NULL, PREC_NONE},
-        [TOKEN_NIL]           = {NULL, NULL, PREC_NONE},
-        [TOKEN_OR]            = {NULL, NULL, PREC_NONE},
-        [TOKEN_PRINT]         = {NULL, NULL, PREC_NONE},
-        [TOKEN_RETURN]        = {NULL, NULL, PREC_NONE},
-        [TOKEN_SUPER]         = {NULL, NULL, PREC_NONE},
-        [TOKEN_THIS]          = {NULL, NULL, PREC_NONE},
-        [TOKEN_TRUE]          = {NULL, NULL, PREC_NONE},
-        [TOKEN_VAR]           = {NULL, NULL, PREC_NONE},
-        [TOKEN_WHILE]         = {NULL, NULL, PREC_NONE},
-        [TOKEN_ERROR]         = {NULL, NULL, PREC_NONE},
-        [TOKEN_EOF]           = {NULL, NULL, PREC_NONE},
+        [TOKEN_LEFT_PAREN]    = {grouping, NULL, PRECEDENCE_NONE},
+        [TOKEN_RIGHT_PAREN]   = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_LEFT_BRACE]    = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_RIGHT_BRACE]   = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_COMMA]         = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_DOT]           = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_MINUS]         = {unary, binary, PRECEDENCE_TERM},
+        [TOKEN_PLUS]          = {NULL, binary, PRECEDENCE_TERM},
+        [TOKEN_SEMICOLON]     = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_SLASH]         = {NULL, binary, PRECEDENCE_FACTOR},
+        [TOKEN_STAR]          = {NULL, binary, PRECEDENCE_FACTOR},
+        [TOKEN_BANG]          = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_BANG_EQUAL]    = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_EQUAL]         = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_EQUAL_EQUAL]   = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_GREATER]       = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_GREATER_EQUAL] = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_LESS]          = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_LESS_EQUAL]    = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_IDENTIFIER]    = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_STRING]        = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_NUMBER]        = {number, NULL, PRECEDENCE_NONE},
+        [TOKEN_AND]           = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_CLASS]         = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_ELSE]          = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_FALSE]         = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_FOR]           = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_FUN]           = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_IF]            = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_NIL]           = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_OR]            = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_PRINT]         = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_RETURN]        = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_SUPER]         = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_THIS]          = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_TRUE]          = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_VAR]           = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_WHILE]         = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_ERROR]         = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_EOF]           = {NULL, NULL, PRECEDENCE_NONE},
 };
 
 /**
- * Determines how to start to parse an expression. If there is no prefix rule for the next token, then there must be a
- * syntax error.
+ * Parses according to precedence.
  *
- * @param precedence
+ * @param precedence The minimum precedence.
  */
 static void parsePrecedence(Precedence precedence) {
+#ifdef DEBUG_PRINT_PARSE_STACK
+    printf("PRIORITY: %d\n", precedence);
+#endif
     advance();
     ParseFn prefixRule = getRule(parser.previous.type)->prefix;
     if (prefixRule == NULL) {
@@ -351,10 +371,8 @@ static ParseRule *getRule(TokenType type) {
  * Compile the expression that follows in the source code.
  */
 static void expression() {
-    parsePrecedence(PREC_ASSIGNMENT);
+    parsePrecedence(PRECEDENCE_ASSIGNMENT);
 }
-
-
 
 /**
  * Compile source code into a chunk of bytecode.
@@ -365,13 +383,15 @@ static void expression() {
  */
 bool compile(const char *source, Chunk *chunk) {
     initScanner(source);
+    compilingChunk = chunk;
+
     parser.hadError = false;
     parser.panicMode = false;
 
     advance();
     expression();
     consume(TOKEN_EOF, "Expect end of expression.");
-    compilingChunk = chunk;
+    endCompiler();
 
     return !parser.hadError;
 }

@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "debug.h"
 #include "value.h"
@@ -61,4 +63,42 @@ int disassembleInstruction(Chunk *chunk, int offset) {
             printf("Unknown opcode %d\n", instruction);
             return offset + 1;
     }
+}
+
+void printToken(Token *token) {
+    // Allocate space needed for token's content.
+    char *content = malloc(token->length + 1);
+    // Copy the content of the token.
+    memcpy(content, token->start, token->length);
+    // Put terminator.
+    content[token->length] = '\0';
+
+    printf("TOKEN_");
+    TokenType type = token->type;
+    switch (type) {
+        case TOKEN_NUMBER: {
+            printf("NUMBER");
+            break;
+        }
+        case TOKEN_STRING: {
+            printf("STRING");
+            break;
+        }
+        case TOKEN_IDENTIFIER: {
+            printf("IDENTIFIER");
+            break;
+        }
+        case TOKEN_ERROR: {
+            printf("ERROR");
+            break;
+        }
+        default: {
+            printf("SYMBOL");
+            break;
+        }
+    }
+    printf(": %s\n", content);
+
+    // Free buffer.
+    free(content);
 }
