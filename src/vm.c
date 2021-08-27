@@ -74,7 +74,7 @@ static InterpretResult run() {
             }
         }
     }
-// Won't need the macro outside the function.
+// Won't need the macros outside the function.
 #undef READ_BYTE
 #undef READ_CONSTANT
 #undef BINARY_OP
