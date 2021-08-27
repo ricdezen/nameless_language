@@ -7,7 +7,7 @@ by me as I go.
 I already read the whole book. I found it very interesting. I am planning to try to implement a full-featured language.
 It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn things.
 
-Reached chapter 19.4.1
+Reached chapter 20
 
 **TO-DO**
 
@@ -61,6 +61,12 @@ Book exercises:
 
 - Implement a stack on a dynamic array for the value stack.
 
+- Look into [flexible array members](https://en.wikipedia.org/wiki/Flexible_array_member) to see if you can further
+  optimize the string structure.
+
+- We always copy the string when allocating the objects. It could be interesting to add support for strings that don't
+  own their character array, but instead point to some non-freeable location. Maybe like the constant table.
+
 My own:
 
 - Change the virtual machine from a global to something that can be created and passed around. This implies modifying
@@ -83,6 +89,8 @@ My own:
 
 - Adjust falseness. In order to add operator overloading, the best idea is probably to do what Python did (special
   methods).
+
+- UTF-8 for strings. *Have*. *Fun*.
 
 - There are various TODO in the code, which do not represent new features, mostly technical stuff that can probably be
   changed locally with no trouble.

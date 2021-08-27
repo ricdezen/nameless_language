@@ -29,6 +29,7 @@ typedef enum {
 
 struct Obj {
     ObjType type;
+    struct Obj *next;
 };
 
 /**
@@ -49,6 +50,15 @@ struct ObjString {
  * @return An object containing the string.
  */
 ObjString *copyString(const char *chars, int length);
+
+/**
+ * Like `copyString` but takes ownership of the given string.
+ *
+ * @param chars The character array this string comes from.
+ * @param length The length of the string. Can't be inferred because we do not know where the string comes from.
+ * @return An object containing the string.
+ */
+ObjString *takeString(char *chars, int length);
 
 /**
  * Print an Object.

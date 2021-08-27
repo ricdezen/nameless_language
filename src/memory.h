@@ -2,6 +2,7 @@
 #define NAMELESS_MEMORY_H
 
 #include "common.h"
+#include "object.h"
 
 /**
  * Macro to allocate memory for an array of values (and cast the pointer to some type).
@@ -10,6 +11,14 @@
  * @param count How many values.
  */
 #define ALLOCATE(type, count) (type*)reallocate(NULL, 0, sizeof(type) * (count))
+
+/**
+ * Free a generic pointer to an object.
+ *
+ * @param type The type of the object to free.
+ * @param pointer Pointer to the object.
+ */
+#define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
 
 /**
  * Macro aimed to increase an array's size.
@@ -47,5 +56,10 @@
  * @return The pointer to the new allocated memory area.
  */
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
+
+/**
+ * Free the linked list of objects of the vm.
+ */
+void freeObjects();
 
 #endif
