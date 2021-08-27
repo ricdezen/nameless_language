@@ -84,4 +84,5 @@ My own:
 - Adjust falseness. In order to add operator overloading, the best idea is probably to do what Python did (special
   methods).
 
-- There are various TODO in the code, which do not represent features, mostly stuff that needs to be fixed.
+- There are various TODO in the code, which do not represent new features, mostly technical stuff that can probably be
+  changed locally with no trouble.
