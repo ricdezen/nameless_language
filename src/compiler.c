@@ -190,11 +190,13 @@ static void emitConstant(Value value) {
  */
 static void endCompiler() {
     emitReturn();
+
 #ifdef DEBUG_PRINT_CODE
     if (!parser.hadError) {
         disassembleChunk(currentChunk(), "code");
     }
 #endif
+
 }
 
 // Template to avoid errors later.
@@ -210,10 +212,12 @@ static void parsePrecedence(Precedence precedence);
  * Parse a binary expression. Calls on the rule table to determine how to parse the terms.
  */
 static void binary() {
+
 #ifdef DEBUG_PRINT_PARSE_STACK
     printf("BINARY: ");
     printToken(&parser.previous);
 #endif
+
     TokenType operatorType = parser.previous.type;
     ParseRule *rule = getRule(operatorType);
     parsePrecedence((Precedence) (rule->precedence + 1));
@@ -240,23 +244,29 @@ static void binary() {
  * Parse a grouping.
  */
 static void grouping() {
+
 #ifdef DEBUG_PRINT_PARSE_STACK
     printf("GROUPING START (\n");
 #endif
+
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+
 #ifdef DEBUG_PRINT_PARSE_STACK
     printf(") GROUPING END\n");
 #endif
+
 }
 
 /**
  * Parse a number.
  */
 static void number() {
+
 #ifdef DEBUG_PRINT_PARSE_STACK
     printToken(&parser.previous);
 #endif
+
     double value = strtod(parser.previous.start, NULL);
     emitConstant(value);
 }
@@ -265,10 +275,12 @@ static void number() {
  * Compile an unary operator.
  */
 static void unary() {
+
 #ifdef DEBUG_PRINT_PARSE_STACK
     printf("UNARY: ");
     printToken(&parser.previous);
 #endif
+
     TokenType operatorType = parser.previous.type;
 
     // Compile the operand.
@@ -336,9 +348,11 @@ ParseRule rules[] = {
  * @param precedence The minimum precedence.
  */
 static void parsePrecedence(Precedence precedence) {
+
 #ifdef DEBUG_PRINT_PARSE_STACK
     printf("PRIORITY: %d\n", precedence);
 #endif
+
     advance();
     ParseFn prefixRule = getRule(parser.previous.type)->prefix;
     if (prefixRule == NULL) {

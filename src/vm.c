@@ -33,10 +33,12 @@ Value pop() {
 }
 
 static InterpretResult run() {
+
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 #define BINARY_OP(op) {double b = pop();double a = pop();push(a op b);} // ! Careful with semicolons after this macro !
     for (;;) {
+
 #ifdef DEBUG_TRACE_EXECUTION
         // Print stack content.
         printf("          ");
@@ -49,6 +51,7 @@ static InterpretResult run() {
         // Disassemble on the fly whilst debugging.
         disassembleInstruction(vm.chunk, (int) (vm.ip - vm.chunk->code));
 #endif
+
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
             case OP_CONSTANT: {
@@ -74,10 +77,12 @@ static InterpretResult run() {
             }
         }
     }
+
 // Won't need the macros outside the function.
 #undef READ_BYTE
 #undef READ_CONSTANT
 #undef BINARY_OP
+
 }
 
 InterpretResult interpret(const char* source) {
