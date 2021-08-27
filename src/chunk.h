@@ -10,10 +10,17 @@
  */
 typedef enum {
     OP_CONSTANT,    // Fetch a constant's value. One byte param: the index of the constant.
+    OP_NIL,         // "nil" literal.
+    OP_TRUE,        // "true" literal.
+    OP_FALSE,       // "false" literal.
+    OP_EQUAL,       // (==) Pops the last two values and returns whether they are equal.
+    OP_GREATER,     // (>) Pops the last two values a and b and returns whether a > b (boolean).
+    OP_LESS,        // (<) Pops the last two values a and b and returns whether a < b (boolean).
     OP_ADD,         // (+) Pops the last two values from the stack and pushes the result.
     OP_SUBTRACT,    // (-) Pops the last two values from the stack and pushes the result.
     OP_MULTIPLY,    // (*) Pops the last two values from the stack and pushes the result.
     OP_DIVIDE,      // (/) Pops the last two values from the stack and pushes the result.
+    OP_NOT,         // (!) Unary Not. Pops the last value from the stack, negates it, pushes the result.
     OP_NEGATE,      // Replace the value at the top of the stack with its negation.
     OP_RETURN,      // Pop the value at the top of the stack.
 } OpCode;
@@ -25,7 +32,7 @@ typedef struct {
     int size;               // Number of elements currently stored in the chunk.
     int capacity;           // Maximum number of elements that can be stored (length of array `code` points to).
     uint8_t *code;          // Pointer to dynamic array of bytes.
-    int*lines;              // Array with the code lines for each byte of code.
+    int *lines;              // Array with the code lines for each byte of code.
     ValueArray constants;   // Array of constants used in the chunk (numbers etc.).
 } Chunk;
 

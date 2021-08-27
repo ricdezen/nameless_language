@@ -9,6 +9,13 @@
 
 #include "debug.h"
 
+static int TABS = 0;
+
+static void PRINT_TABS() {
+    for (int i = 0; i < TABS; i++)
+        printf(" ");
+}
+
 #endif
 
 /**
@@ -214,6 +221,7 @@ static void parsePrecedence(Precedence precedence);
 static void binary() {
 
 #ifdef DEBUG_PRINT_PARSE_STACK
+    PRINT_TABS();
     printf("BINARY: ");
     printToken(&parser.previous);
 #endif
@@ -223,6 +231,24 @@ static void binary() {
     parsePrecedence((Precedence) (rule->precedence + 1));
 
     switch (operatorType) {
+        case TOKEN_BANG_EQUAL:
+            emitTwoBytes(OP_EQUAL, OP_NOT);
+            break;
+        case TOKEN_EQUAL_EQUAL:
+            emitByte(OP_EQUAL);
+            break;
+        case TOKEN_GREATER:
+            emitByte(OP_GREATER);
+            break;
+        case TOKEN_GREATER_EQUAL:
+            emitTwoBytes(OP_LESS, OP_NOT);
+            break;
+        case TOKEN_LESS:
+            emitByte(OP_LESS);
+            break;
+        case TOKEN_LESS_EQUAL:
+            emitTwoBytes(OP_GREATER, OP_NOT);
+            break;
         case TOKEN_PLUS:
             emitByte(OP_ADD);
             break;
@@ -241,18 +267,48 @@ static void binary() {
 }
 
 /**
+ * Just parse a literal. A literal just has a corresponding operation in the vm.
+ */
+static void literal() {
+
+#ifdef DEBUG_PRINT_PARSE_STACK
+    PRINT_TABS();
+    printf("LITERAL: ");
+    printToken(&parser.previous);
+#endif
+
+    switch (parser.previous.type) {
+        case TOKEN_FALSE:
+            emitByte(OP_FALSE);
+            break;
+        case TOKEN_NIL:
+            emitByte(OP_NIL);
+            break;
+        case TOKEN_TRUE:
+            emitByte(OP_TRUE);
+            break;
+        default:
+            return; // Unreachable.
+    }
+}
+
+/**
  * Parse a grouping.
  */
 static void grouping() {
 
 #ifdef DEBUG_PRINT_PARSE_STACK
+    PRINT_TABS();
     printf("GROUPING START (\n");
+    TABS += 4;
 #endif
 
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 
 #ifdef DEBUG_PRINT_PARSE_STACK
+    TABS -= 4;
+    PRINT_TABS();
     printf(") GROUPING END\n");
 #endif
 
@@ -264,11 +320,12 @@ static void grouping() {
 static void number() {
 
 #ifdef DEBUG_PRINT_PARSE_STACK
+    PRINT_TABS();
     printToken(&parser.previous);
 #endif
 
     double value = strtod(parser.previous.start, NULL);
-    emitConstant(value);
+    emitConstant(NUMBER_VAL(value));
 }
 
 /**
@@ -277,6 +334,7 @@ static void number() {
 static void unary() {
 
 #ifdef DEBUG_PRINT_PARSE_STACK
+    PRINT_TABS();
     printf("UNARY: ");
     printToken(&parser.previous);
 #endif
@@ -288,6 +346,9 @@ static void unary() {
 
     // Emit the operator instruction.
     switch (operatorType) {
+        case TOKEN_BANG:
+            emitByte(OP_NOT);
+            break;
         case TOKEN_MINUS:
             emitByte(OP_NEGATE);
             break;
@@ -311,31 +372,31 @@ ParseRule rules[] = {
         [TOKEN_SEMICOLON]     = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_SLASH]         = {NULL, binary, PRECEDENCE_FACTOR},
         [TOKEN_STAR]          = {NULL, binary, PRECEDENCE_FACTOR},
-        [TOKEN_BANG]          = {NULL, NULL, PRECEDENCE_NONE},
-        [TOKEN_BANG_EQUAL]    = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_BANG]          = {unary, NULL, PRECEDENCE_NONE},
+        [TOKEN_BANG_EQUAL]    = {NULL, binary, PRECEDENCE_EQUALITY},
         [TOKEN_EQUAL]         = {NULL, NULL, PRECEDENCE_NONE},
-        [TOKEN_EQUAL_EQUAL]   = {NULL, NULL, PRECEDENCE_NONE},
-        [TOKEN_GREATER]       = {NULL, NULL, PRECEDENCE_NONE},
-        [TOKEN_GREATER_EQUAL] = {NULL, NULL, PRECEDENCE_NONE},
-        [TOKEN_LESS]          = {NULL, NULL, PRECEDENCE_NONE},
-        [TOKEN_LESS_EQUAL]    = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_EQUAL_EQUAL]   = {NULL, binary, PRECEDENCE_EQUALITY},
+        [TOKEN_GREATER]       = {NULL, binary, PRECEDENCE_COMPARISON},
+        [TOKEN_GREATER_EQUAL] = {NULL, binary, PRECEDENCE_COMPARISON},
+        [TOKEN_LESS]          = {NULL, binary, PRECEDENCE_COMPARISON},
+        [TOKEN_LESS_EQUAL]    = {NULL, binary, PRECEDENCE_COMPARISON},
         [TOKEN_IDENTIFIER]    = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_STRING]        = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_NUMBER]        = {number, NULL, PRECEDENCE_NONE},
         [TOKEN_AND]           = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_CLASS]         = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_ELSE]          = {NULL, NULL, PRECEDENCE_NONE},
-        [TOKEN_FALSE]         = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_FALSE]         = {literal, NULL, PRECEDENCE_NONE},
         [TOKEN_FOR]           = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_FUN]           = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_IF]            = {NULL, NULL, PRECEDENCE_NONE},
-        [TOKEN_NIL]           = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_NIL]           = {literal, NULL, PRECEDENCE_NONE},
         [TOKEN_OR]            = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_PRINT]         = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_RETURN]        = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_SUPER]         = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_THIS]          = {NULL, NULL, PRECEDENCE_NONE},
-        [TOKEN_TRUE]          = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_TRUE]          = {literal, NULL, PRECEDENCE_NONE},
         [TOKEN_VAR]           = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_WHILE]         = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_ERROR]         = {NULL, NULL, PRECEDENCE_NONE},
@@ -350,6 +411,7 @@ ParseRule rules[] = {
 static void parsePrecedence(Precedence precedence) {
 
 #ifdef DEBUG_PRINT_PARSE_STACK
+    PRINT_TABS();
     printf("PRIORITY: %d\n", precedence);
 #endif
 
@@ -372,6 +434,7 @@ static void parsePrecedence(Precedence precedence) {
         ParseFn infixRule = getRule(parser.previous.type)->infix;
         infixRule();
     }
+
 }
 
 /**
@@ -385,7 +448,19 @@ static ParseRule *getRule(TokenType type) {
  * Compile the expression that follows in the source code.
  */
 static void expression() {
+
+#ifdef DEBUG_PRINT_PARSE_STACK
+    PRINT_TABS();
+    printf("EXPRESSION: \n");
+    TABS += 4;
+#endif
+
     parsePrecedence(PRECEDENCE_ASSIGNMENT);
+
+#ifdef DEBUG_PRINT_PARSE_STACK
+    TABS -= 4;
+#endif
+
 }
 
 /**

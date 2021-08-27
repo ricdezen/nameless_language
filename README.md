@@ -7,7 +7,7 @@ by me as I go.
 I already read the whole book. I found it very interesting. I am planning to try to implement a full-featured language.
 It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn things.
 
-Reached chapter 18
+Reached chapter 19
 
 **TO-DO**
 
@@ -74,6 +74,11 @@ My own:
 
 - After fixing strings, add non-escape (raw strings) and string interpolation (Python's format strings).
 
+- Some operators such as `!=`, `>=`, `<=` are syntactic sugar. Implement them with a dedicated instruction.
+
 - Other famous operators: `>>`, `<<`, `**`, `++`, `--`, `//`, `+=`, `-=`, `*=`, `/=`, `[]`, `()`.
+
+- Adjust falseness. In order to add operator overloading, the best idea is probably to do what Python did (special
+  methods).
 
 - There are various TODO in the code, which do not represent features, mostly stuff that needs to be fixed.
