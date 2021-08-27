@@ -74,6 +74,9 @@ My own:
 
 - After fixing strings, add non-escape (raw strings) and string interpolation (Python's format strings).
 
+- I assume adding aliases for logical operators would be nice? Or at least uniform the style: I have `and`, `or` and `!`
+  . So either turn `!` into `not`, turn `and`/`or` into `&&`/`||`, or keep all 6.
+
 - Some operators such as `!=`, `>=`, `<=` are syntactic sugar. Implement them with a dedicated instruction.
 
 - Other famous operators: `>>`, `<<`, `**`, `++`, `--`, `//`, `+=`, `-=`, `*=`, `/=`, `[]`, `()`.
