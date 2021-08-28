@@ -7,7 +7,7 @@ by me as I go.
 I already read the whole book. I found it very interesting. I am planning to try to implement a full-featured language.
 It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn things.
 
-Reached chapter 21
+Reached chapter 22
 
 **TO-DO**
 
@@ -69,6 +69,15 @@ Book exercises:
 
 - ~~Add other values as keys in the hash table.~~ I'll change this to: add has to any object. I do not really dig NaN
   boxing, so I would have those 4 spare bytes inside the Value structure.
+
+- The compiler adds a global variable’s name to the constant table as a string every time an identifier is encountered.
+  It creates a new constant each time, even if that variable name is already in a previous slot in the constant table.
+  That’s wasteful in cases where the same variable is referenced multiple times by the same function. That, in turn,
+  increases the odds of filling up the constant table and running out of slots since we allow only 256 constants in a
+  single chunk.
+
+- Looking up a global variable by name in a hash table each time it is used is pretty slow, even with a good hash table.
+  Can you come up with a more efficient way to store and access global variables without changing the semantics?
 
 My own:
 

@@ -9,20 +9,25 @@
  * Is supposed to remain below 256 values.
  */
 typedef enum {
-    OP_CONSTANT,    // Fetch a constant's value. One byte param: the index of the constant.
-    OP_NIL,         // "nil" literal.
-    OP_TRUE,        // "true" literal.
-    OP_FALSE,       // "false" literal.
-    OP_EQUAL,       // (==) Pops the last two values and returns whether they are equal.
-    OP_GREATER,     // (>) Pops the last two values a and b and returns whether a > b (boolean).
-    OP_LESS,        // (<) Pops the last two values a and b and returns whether a < b (boolean).
-    OP_ADD,         // (+) Pops the last two values from the stack and pushes the result.
-    OP_SUBTRACT,    // (-) Pops the last two values from the stack and pushes the result.
-    OP_MULTIPLY,    // (*) Pops the last two values from the stack and pushes the result.
-    OP_DIVIDE,      // (/) Pops the last two values from the stack and pushes the result.
-    OP_NOT,         // (!) Unary Not. Pops the last value from the stack, negates it, pushes the result.
-    OP_NEGATE,      // Replace the value at the top of the stack with its negation.
-    OP_RETURN,      // Pop the value at the top of the stack.
+    OP_CONSTANT,        // Fetch a constant's value. One byte param: the index of the constant.
+    OP_NIL,             // "nil" literal.
+    OP_TRUE,            // "true" literal.
+    OP_FALSE,           // "false" literal.
+    OP_POP,             // Just pop a value. Used for expression statements.
+    OP_GET_GLOBAL,      // Get a global variable's name. Push the value of the variable to the stack.
+    OP_DEFINE_GLOBAL,   // Define a global variable. This is a statement therefore pops the value from the stack.
+    OP_SET_GLOBAL,      // Set a global variable. Since it is an expression, it does not pop from the stack, looks only.
+    OP_EQUAL,           // (==) Pops the last two values and returns whether they are equal.
+    OP_GREATER,         // (>) Pops the last two values a and b and returns whether a > b (boolean).
+    OP_LESS,            // (<) Pops the last two values a and b and returns whether a < b (boolean).
+    OP_ADD,             // (+) Pops the last two values from the stack and pushes the result.
+    OP_SUBTRACT,        // (-) Pops the last two values from the stack and pushes the result.
+    OP_MULTIPLY,        // (*) Pops the last two values from the stack and pushes the result.
+    OP_DIVIDE,          // (/) Pops the last two values from the stack and pushes the result.
+    OP_NOT,             // (!) Unary Not. Pops the last value from the stack, negates it, pushes the result.
+    OP_NEGATE,          // Replace the value at the top of the stack with its negation.
+    OP_PRINT,           // Print statement. Pop the last value and print it.
+    OP_RETURN,          // Pop the value at the top of the stack.
 } OpCode;
 
 /**
