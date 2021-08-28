@@ -41,10 +41,12 @@ static void runtimeError(const char *format, ...) {
 void initVM() {
     resetStack();
     vm.objects = NULL;
+    initTable(&vm.strings);
 }
 
 void freeVM() {
     freeObjects();
+    freeTable(&vm.strings);
 }
 
 void push(Value value) {
@@ -74,7 +76,7 @@ static void concatenate() {
 
     int length = a->length + b->length;
     char *chars = ALLOCATE(
-    char, length + 1);
+            char, length + 1);
     memcpy(chars, a->chars, a->length);
     memcpy(chars + a->length, b->chars, b->length);
     chars[length] = '\0';

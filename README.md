@@ -7,7 +7,7 @@ by me as I go.
 I already read the whole book. I found it very interesting. I am planning to try to implement a full-featured language.
 It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn things.
 
-Reached chapter 20
+Reached chapter 21
 
 **TO-DO**
 
@@ -66,6 +66,9 @@ Book exercises:
 
 - We always copy the string when allocating the objects. It could be interesting to add support for strings that don't
   own their character array, but instead point to some non-freeable location. Maybe like the constant table.
+
+- ~~Add other values as keys in the hash table.~~ I'll change this to: add has to any object. I do not really dig NaN
+  boxing, so I would have those 4 spare bytes inside the Value structure.
 
 My own:
 

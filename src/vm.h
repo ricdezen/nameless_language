@@ -3,6 +3,7 @@
 
 #include "chunk.h"
 #include "value.h"
+#include "table.h"
 
 #define STACK_MAX 256
 
@@ -11,6 +12,7 @@ typedef struct {
     uint8_t *ip;            // Instruction pointer. Where the "processor" is at.
     Value stack[STACK_MAX]; // Value stack.
     Value *stackTop;        // Pointer to stack top.
+    Table strings;          // Hashtable containing strings, for interning.
     Obj *objects;           // As a temporary solution, a linked list of objects.
 } VM;
 
