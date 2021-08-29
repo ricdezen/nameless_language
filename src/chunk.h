@@ -14,6 +14,10 @@ typedef enum {
     OP_TRUE,            // "true" literal.
     OP_FALSE,           // "false" literal.
     OP_POP,             // Just pop a value. Used for expression statements.
+    // OP_DEFINE_LOCAL     Not used because when defining a local variable, it just becomes the last stack value during
+    //                     compile time so no extra operation is needed during runtime.
+    OP_GET_LOCAL,       // Get a local variable. Push onto the stack the local corresponding to the next byte.
+    OP_SET_LOCAL,       // Set a local variable. Since it is an expression, it does not pop from the stack, looks only.
     OP_GET_GLOBAL,      // Get a global variable's name. Push the value of the variable to the stack.
     OP_DEFINE_GLOBAL,   // Define a global variable. This is a statement therefore pops the value from the stack.
     OP_SET_GLOBAL,      // Set a global variable. Since it is an expression, it does not pop from the stack, looks only.

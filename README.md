@@ -7,7 +7,7 @@ by me as I go.
 I already read the whole book. I found it very interesting. I am planning to try to implement a full-featured language.
 It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn things.
 
-Reached chapter 22
+Reached chapter 23
 
 **TO-DO**
 
@@ -59,6 +59,8 @@ Book exercises:
 
 - Implement another (or another two) instruction to load more than 255 constants.
 
+- Idem for other places where the 255 limit is in place (e.g. local variables).
+
 - Implement a stack on a dynamic array for the value stack.
 
 - Look into [flexible array members](https://en.wikipedia.org/wiki/Flexible_array_member) to see if you can further
@@ -79,6 +81,10 @@ Book exercises:
 - Looking up a global variable by name in a hash table each time it is used is pretty slow, even with a good hash table.
   Can you come up with a more efficient way to store and access global variables without changing the semantics?
 
+- Our simple local array makes it easy to calculate the stack slot of each local variable. But it means that when the
+  compiler resolves a reference to a variable, we have to do a linear scan through the array. Come up with something
+  more efficient. Do you think the additional complexity is worth it?
+
 My own:
 
 - Change the virtual machine from a global to something that can be created and passed around. This implies modifying
@@ -87,6 +93,8 @@ My own:
 - Same for the Scanner.
 
 - Same for the Parser (and the concept of "current chunk" can probably be added to the parser).
+
+- You guessed it, same for the Compiler.
 
 - Change Strings to behave more like other languages. Look into UTF-8 and escape sequences.
 
