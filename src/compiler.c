@@ -218,6 +218,34 @@ static void emitTwoBytes(uint8_t byte1, uint8_t byte2) {
 }
 
 /**
+ * Jump backwards towards the start of a loop.
+ *
+ * @param loopStart The start of the loop.
+ */
+static void emitLoop(int loopStart) {
+    emitByte(OP_LOOP);
+
+    int offset = currentChunk()->size - loopStart + 2;
+    if (offset > UINT16_MAX) error("Loop body too large.");
+
+    emitByte((offset >> 8) & 0xff);
+    emitByte(offset & 0xff);
+}
+
+/**
+ * Emit a jump instruction and leave two bytes for the operand.
+ *
+ * @param instruction The instruction to use for the jump.
+ * @return The index in the chunk where the jump argument begins.
+ */
+static int emitJump(uint8_t instruction) {
+    emitByte(instruction);
+    emitByte(0xff);
+    emitByte(0xff);
+    return currentChunk()->size - 2;
+}
+
+/**
  * Helper function that just outputs a return instruction.
  */
 static void emitReturn() {
@@ -248,6 +276,64 @@ static uint8_t makeConstant(Value value) {
 static void emitConstant(Value value) {
     uint8_t constant = makeConstant(value);
     emitTwoBytes(OP_CONSTANT, constant);
+}
+
+/**
+ * Write the actual jump operand. Writes the current instruction index as the jump operand of the jump instruction
+ * with the operand beginning at the given offset.
+ *
+ * @param offset The offset returned by `emitJump`.
+ */
+static void patchJump(int offset) {
+    // How much to jump from the jump instruction, excluding the two byte operand.
+    // Assumes we want to jump "here", where we called this function.
+    // -2 to adjust for the bytecode for the jump offset itself.
+    int jump = currentChunk()->size - offset - 2;
+
+    if (jump > UINT16_MAX)
+        error("Too much code to jump over.");
+
+    // Write the jump offset.
+    currentChunk()->code[offset] = (jump >> 8) & 0xff;
+    currentChunk()->code[offset + 1] = jump & 0xff;
+}
+
+/**
+ * Compile and with short-circuit capabilities.
+ *
+ * @param canAssign Unused.
+ */
+static void and_(bool canAssign) {
+    // The left-hand side has already been parsed.
+    // Emit short-circuit jump if the left hand is false.
+    int endJump = emitJump(OP_JUMP_IF_FALSE);
+
+    // Right-hand side. If the left-hand was true,
+    // the result depends only on the right-hand.
+    emitByte(OP_POP);
+    parsePrecedence(PRECEDENCE_AND);
+
+    patchJump(endJump);
+}
+
+/**
+ * Compile or with short-circuit capabilities.
+ *
+ * @param canAssign Unused.
+ */
+static void or_(bool canAssign) {
+    // TODO the book does it like this to show what kind of flexibility we can expect. Better to add a JUMP_IF_TRUE.
+    // If false, avoid the unconditional jump that immediately follows and would skip the right-hand side.
+    int elseJump = emitJump(OP_JUMP_IF_FALSE);
+    // Skip right-hand if left-hand is true.
+    int endJump = emitJump(OP_JUMP);
+
+    patchJump(elseJump);
+
+    emitByte(OP_POP);
+    parsePrecedence(PRECEDENCE_OR);
+
+    patchJump(endJump);
 }
 
 /**
@@ -559,7 +645,7 @@ ParseRule rules[] = {
         [TOKEN_IDENTIFIER]    = {variable, NULL, PRECEDENCE_NONE},
         [TOKEN_STRING]        = {string, NULL, PRECEDENCE_NONE},
         [TOKEN_NUMBER]        = {number, NULL, PRECEDENCE_NONE},
-        [TOKEN_AND]           = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_AND]           = {NULL, and_, PRECEDENCE_AND},
         [TOKEN_CLASS]         = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_ELSE]          = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_FALSE]         = {literal, NULL, PRECEDENCE_NONE},
@@ -567,7 +653,7 @@ ParseRule rules[] = {
         [TOKEN_FUN]           = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_IF]            = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_NIL]           = {literal, NULL, PRECEDENCE_NONE},
-        [TOKEN_OR]            = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_OR]            = {NULL, or_, PRECEDENCE_OR},
         [TOKEN_PRINT]         = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_RETURN]        = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_SUPER]         = {NULL, NULL, PRECEDENCE_NONE},
@@ -785,12 +871,134 @@ static void expressionStatement() {
 }
 
 /**
+ * Parse if statement.
+ */
+static void ifStatement() {
+    // Parse the condition.
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+    expression();   // The condition.
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+
+    // Emit instruction to jump over the then branch.
+    int thenJump = emitJump(OP_JUMP_IF_FALSE);
+    emitByte(OP_POP);
+
+    // Compile the statement for the then branch.
+    statement();
+
+    // Emit instruction to jump over the else branch.
+    int elseJump = emitJump(OP_JUMP);
+
+    // Put the offset for jumping over the else.
+    patchJump(thenJump);
+    emitByte(OP_POP);
+
+    // If there is an else, compile the statement for the else branch.
+    if (match(TOKEN_ELSE))
+        statement();
+
+    // Put the offset for jumping over the else.
+    patchJump(elseJump);
+}
+
+/**
  * Compile a print statement.
  */
 static void printStatement() {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after value.");
     emitByte(OP_PRINT);
+}
+
+/**
+ * Compile a while statement.
+ */
+static void whileStatement() {
+    // Position of the condition for the backwards jump.
+    int loopStart = currentChunk()->size;
+
+    // Condition compilation.
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+
+    // Exit the loop if the condition is false.
+    int exitJump = emitJump(OP_JUMP_IF_FALSE);
+    emitByte(OP_POP);   // Pop condition.
+
+    // Body of the loop.
+    statement();
+
+    // Go back to the condition.
+    emitLoop(loopStart);
+
+    patchJump(exitJump);
+    emitByte(OP_POP);   // Pop condition.
+}
+
+/**
+ * Compile a for statement.
+ */
+static void forStatement() {
+    // Enclose in a scope because any initializer
+    // must be visible in the loop but not outside.
+    beginScope();
+
+    // Initializer.
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+    if (match(TOKEN_SEMICOLON)) {
+        // No initializer.
+    } else if (match(TOKEN_VAR)) {
+        varDeclaration();
+    } else {
+        expressionStatement();
+    }
+
+    // Each iteration starts at the condition.
+    int loopStart = currentChunk()->size;
+
+    // Condition.
+    int exitJump = -1;
+    if (!match(TOKEN_SEMICOLON)) {
+        expression();
+        consume(TOKEN_SEMICOLON, "Expect ';' after loop condition.");
+
+        // Jump out of the loop if the condition is false.
+        exitJump = emitJump(OP_JUMP_IF_FALSE);
+        // Ignore value of condition (jump only peeks).
+        emitByte(OP_POP);
+    }
+
+    // Increment statement.
+    if (!match(TOKEN_RIGHT_PAREN)) {
+        // Don't increment at the first iteration so jump over it the first time.
+        int bodyJump = emitJump(OP_JUMP);
+        int incrementStart = currentChunk()->size;
+        // Ignore result of expression, we only care about its side effect.
+        expression();
+        emitByte(OP_POP);
+        consume(TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
+
+        // After incrementing, loop back at the condition.
+        emitLoop(loopStart);
+        // Jump at the body after the condition.
+        loopStart = incrementStart;
+        patchJump(bodyJump);
+    }
+
+    // This is just the body, after which we will jump back at the increment
+    // or at the condition if there is no increment.
+    statement();
+    emitLoop(loopStart);
+
+    // If there is no condition, I need no jump.
+    if (exitJump != -1) {
+        patchJump(exitJump);
+        // Ignore value of condition after jump.
+        emitByte(OP_POP);
+    }
+
+    endScope();
 }
 
 /**
@@ -843,6 +1051,12 @@ static void declaration() {
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else if (match(TOKEN_IF)) {
+        ifStatement();
+    } else if (match(TOKEN_WHILE)) {
+        whileStatement();
+    } else if (match(TOKEN_FOR)) {
+        forStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {
         beginScope();
         block();

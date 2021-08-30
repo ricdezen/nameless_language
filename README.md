@@ -7,7 +7,7 @@ by me as I go.
 I already read the whole book. I found it very interesting. I am planning to try to implement a full-featured language.
 It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn things.
 
-Reached chapter 23
+Reached chapter 24
 
 **TO-DO**
 
@@ -85,6 +85,8 @@ Book exercises:
   compiler resolves a reference to a variable, we have to do a linear scan through the array. Come up with something
   more efficient. Do you think the additional complexity is worth it?
 
+- Implement a switch statement. For this I think it would be easier for me to avoid fall-through.
+
 My own:
 
 - Change the virtual machine from a global to something that can be created and passed around. This implies modifying
@@ -111,6 +113,8 @@ My own:
   methods).
 
 - UTF-8 for strings. *Have*. *Fun*.
+
+- Increase max control flow jump distance. Probably a set of three instructions will slightly improve speed.
 
 - There are various TODO in the code, which do not represent new features, mostly technical stuff that can probably be
   changed locally with no trouble.
