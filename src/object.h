@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "value.h"
+#include "chunk.h"
 
 /**
  * Get an object's type. Check it actually is an Object, you forgetful buffoon.
@@ -10,9 +11,19 @@
 #define OBJ_TYPE(value)        (AS_OBJ(value)->type)
 
 /**
+ * Check if the Value is a function object.
+ */
+#define IS_FUNCTION(value)     isObjType(value, OBJ_FUNCTION)
+
+/**
  * Check if the Value is a string object.
  */
 #define IS_STRING(value)       isObjType(value, OBJ_STRING)
+
+/**
+ * Don't cast without checking etc.
+ */
+#define AS_FUNCTION(value)     ((ObjFunction*)AS_OBJ(value))
 
 /**
  * Should I repeat myself again about the shadow realm and whatnot?
@@ -24,13 +35,27 @@
  * First order object types.
  */
 typedef enum {
+    OBJ_FUNCTION,
     OBJ_STRING,
 } ObjType;
 
+/**
+ * Structure representing an Object.
+ */
 struct Obj {
     ObjType type;
     struct Obj *next;
 };
+
+/**
+ * Structure for a function object.
+ */
+typedef struct {
+    Obj obj;            // The base Object structure.
+    int arity;          // How many parameters the function takes.
+    Chunk chunk;        // The code of the function.
+    ObjString *name;    // The string name of the function.
+} ObjFunction;
 
 /**
  * Notice the Obj field is first. This is fundamental to allow down-casting from an Obj structure that we assert
@@ -42,6 +67,13 @@ struct ObjString {
     int length;
     char *chars;
 };
+
+/**
+ * Allocate a new function Object.
+ *
+ * @return An allocated ObjFunction.
+ */
+ObjFunction *newFunction();
 
 /**
  * Take a string and put it in an object after copying it.
