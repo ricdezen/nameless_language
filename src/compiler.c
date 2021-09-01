@@ -86,11 +86,12 @@ typedef enum {
  * we consider it as implicitly included inside a "main" Function.
  */
 typedef struct {
-    ObjFunction *function;
-    FunctionType type;
-    Local locals[UINT8_COUNT];
-    int localCount;
-    int scopeDepth;
+    struct Compiler *enclosing; // The enclosing Compiler.
+    ObjFunction *function;      // The function (or script) being compiled.
+    FunctionType type;          // The type of function being compiled (fun or script).
+    Local locals[UINT8_COUNT];  // Local variables stack.
+    int localCount;             // How many local variables are there.
+    int scopeDepth;             // The depth of the scope, for local variable scope.
 } Compiler;
 
 // Few templates to avoid errors ---
@@ -258,6 +259,7 @@ static int emitJump(uint8_t instruction) {
  * Helper function that just outputs a return instruction.
  */
 static void emitReturn() {
+    emitByte(OP_NIL);
     emitByte(OP_RETURN);
 }
 
@@ -352,6 +354,7 @@ static void or_(bool canAssign) {
  * @param type The type of function compiled by this compiler.
  */
 static void initCompiler(Compiler *compiler, FunctionType type) {
+    compiler->enclosing = (struct Compiler *) current;  // TODO I know this cast is fine, but is there no better way?
     compiler->function = NULL;
     compiler->type = type;
     compiler->localCount = 0;
@@ -360,6 +363,10 @@ static void initCompiler(Compiler *compiler, FunctionType type) {
     compiler->function = newFunction();
 
     current = compiler;
+    // This chunk of code has a name if it is not a script.
+    if (type != TYPE_SCRIPT) {
+        current->function->name = copyString(parser.previous.start, parser.previous.length);
+    }
 
     // Take ownership of the first Local. Give it an empty name to avoid user writing on it.
     Local *local = &current->locals[current->localCount++];
@@ -383,6 +390,9 @@ static ObjFunction *endCompiler() {
         disassembleChunk(currentChunk(), function->name != NULL ? function->name->chars : "<script>");
     }
 #endif
+
+    // Go back to compiling the outer block.
+    current = (Compiler *) current->enclosing;  // TODO I know this cast is fine, but is there no better way?
 
     return function;
 
@@ -488,6 +498,37 @@ static void binary(bool canAssign) {
         default:
             return; // Unreachable.
     }
+}
+
+/**
+ * Compile a list of expressions separated by commas.
+ * TODO this is good inspiration for tuple/list compilation.
+ *
+ * @return How many arguments the function was called with, used for arity check.
+ */
+static uint8_t argumentList() {
+    uint8_t argCount = 0;
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            expression();
+            if (argCount == 255) {
+                error("Can't have more than 255 arguments.");
+            }
+            argCount++;
+        } while (match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+    return argCount;
+}
+
+/**
+ * Compile a function call.
+ *
+ * @param canAssign Unused.
+ */
+static void call(bool canAssign) {
+    uint8_t argCount = argumentList();
+    emitTwoBytes(OP_CALL, argCount);
 }
 
 /**
@@ -649,7 +690,7 @@ static void unary(bool canAssign) {
  * Rules for the various tokens.
  */
 ParseRule rules[] = {
-        [TOKEN_LEFT_PAREN]    = {grouping, NULL, PRECEDENCE_NONE},
+        [TOKEN_LEFT_PAREN]    = {grouping, call, PRECEDENCE_CALL},
         [TOKEN_RIGHT_PAREN]   = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_LEFT_BRACE]    = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_RIGHT_BRACE]   = {NULL, NULL, PRECEDENCE_NONE},
@@ -848,9 +889,11 @@ static uint8_t parseVariable(const char *errorMessage) {
 }
 
 /**
- * Mark last local variable as initialized.
+ * Mark last local variable as initialized. If this is called on a global variable, nothing is done.
  */
 static void markInitialized() {
+    if (current->scopeDepth == 0)
+        return;
     current->locals[current->localCount - 1].depth = current->scopeDepth;
 }
 
@@ -884,6 +927,51 @@ static void varDeclaration() {
     }
     consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
 
+    defineVariable(global);
+}
+
+/**
+ * Parse a function.
+ *
+ * @param type The type of function (script or function).
+ */
+static void function(FunctionType type) {
+    Compiler compiler;
+    initCompiler(&compiler, type);
+    beginScope();
+
+    // Parameters.
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            current->function->arity++;
+            // TODO move this 255 to a constant.
+            if (current->function->arity > 255) {
+                errorAtCurrent("Can't have more than 255 parameters.");
+            }
+            uint8_t constant = parseVariable("Expect parameter name.");
+            defineVariable(constant);
+        } while (match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before function body.");
+
+    // The body of the function.
+    block();
+
+    ObjFunction *function = endCompiler();
+    emitTwoBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+}
+
+/**
+ * Parse a function's declaration and assign it to a variable.
+ */
+static void funDeclaration() {
+    uint8_t global = parseVariable("Expect function name.");
+    // The function is already initialized, because
+    // we can reference it in its body for recursion.
+    markInitialized();
+    function(TYPE_FUNCTION);
     defineVariable(global);
 }
 
@@ -934,6 +1022,26 @@ static void printStatement() {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after value.");
     emitByte(OP_PRINT);
+}
+
+/**
+ * Compile a return statement.
+ */
+static void returnStatement() {
+    // Self-explanatory.
+    if (current->type == TYPE_SCRIPT) {
+        error("Can't return from top-level code.");
+    }
+
+    if (match(TOKEN_SEMICOLON)) {
+        // Empty return.
+        emitReturn();
+    } else {
+        // Return something.
+        expression();
+        consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
+        emitByte(OP_RETURN);
+    }
 }
 
 /**
@@ -1059,11 +1167,13 @@ static void synchronize() {
 }
 
 /**
- * In place for later.
+ * Try to consume the token types.
  */
 static void declaration() {
 
-    if (match(TOKEN_VAR)) {
+    if (match(TOKEN_FUN)) {
+        funDeclaration();
+    } else if (match(TOKEN_VAR)) {
         varDeclaration();
     } else {
         statement();
@@ -1079,6 +1189,8 @@ static void statement() {
         printStatement();
     } else if (match(TOKEN_IF)) {
         ifStatement();
+    } else if (match(TOKEN_RETURN)) {
+        returnStatement();
     } else if (match(TOKEN_WHILE)) {
         whileStatement();
     } else if (match(TOKEN_FOR)) {

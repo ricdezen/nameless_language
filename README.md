@@ -5,9 +5,10 @@ repository is the code for my version of *clox*, which is going to initially be 
 by me as I go.
 
 I already read the whole book. I found it very interesting. I am planning to try to implement a full-featured language.
-It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn things.
+It will take quite some time, but I have a list of features in mind. Nothing special, this is not going to be the new
+Python, I just want to learn things.
 
-Reached chapter 24.4
+Reached chapter 24.7
 
 **TO-DO**
 

@@ -34,6 +34,7 @@ typedef enum {
     OP_JUMP,            // Jump. Takes 2-byte operand. Used at the end of a then branch in an if.
     OP_JUMP_IF_FALSE,   // Jump if the last value on the stack is false. Takes 2-byte operand. Does not pop.
     OP_LOOP,            // Jump backwards. Takes 2-byte operand, which is how many bytes to jump backwards.
+    OP_CALL,            // Call an object. Does not need to pop.
     OP_RETURN,          // Pop the value at the top of the stack.
 } OpCode;
 
