@@ -73,10 +73,21 @@ typedef struct {
 } Local;
 
 /**
+ * Type of function.
+ */
+typedef enum {
+    TYPE_FUNCTION,
+    TYPE_SCRIPT
+} FunctionType;
+
+/**
  * Structure representing the Compiler. It keeps track of the local variables, in order to simulate the stack and
- * properly place them in the code.
+ * properly place them in the code. In order to compile a function, each compiler keeps track of it. To compile a script
+ * we consider it as implicitly included inside a "main" Function.
  */
 typedef struct {
+    ObjFunction *function;
+    FunctionType type;
     Local locals[UINT8_COUNT];
     int localCount;
     int scopeDepth;
@@ -100,11 +111,9 @@ static uint8_t identifierConstant(Token *name);
 
 Parser parser;
 Compiler *current = NULL;
-Chunk *compilingChunk;
 
-// Just returns the chunk that's currently being compiled.
 static Chunk *currentChunk() {
-    return compilingChunk;
+    return &current->function->chunk;
 }
 
 /**
@@ -340,25 +349,42 @@ static void or_(bool canAssign) {
  * Initialize a compiler and assign it to the global member `compiler`.
  *
  * @param compiler The compiler to initialize.
+ * @param type The type of function compiled by this compiler.
  */
-static void initCompiler(Compiler *compiler) {
+static void initCompiler(Compiler *compiler, FunctionType type) {
+    compiler->function = NULL;
+    compiler->type = type;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
+
+    compiler->function = newFunction();
+
     current = compiler;
+
+    // Take ownership of the first Local. Give it an empty name to avoid user writing on it.
+    Local *local = &current->locals[current->localCount++];
+    local->depth = 0;
+    local->name.start = "";
+    local->name.length = 0;
 }
 
 /**
  * Finish compilation. Last instruction is a return. Returning from top level means the execution terminates (with some
  * exit code).
+ *
+ * @return The function that was compiled.
  */
-static void endCompiler() {
+static ObjFunction *endCompiler() {
     emitReturn();
+    ObjFunction *function = current->function;
 
 #ifdef DEBUG_PRINT_CODE
     if (!parser.hadError) {
-        disassembleChunk(currentChunk(), "code");
+        disassembleChunk(currentChunk(), function->name != NULL ? function->name->chars : "<script>");
     }
 #endif
+
+    return function;
 
 }
 
@@ -1070,14 +1096,12 @@ static void statement() {
  * Compile source code into a chunk of bytecode.
  *
  * @param source Source code.
- * @param chunk Target chunk.
- * @return true if compilation was successful, false if it was not.
+ * @return the compiled function if compilation was successful, NULL otherwise if it was not.
  */
-bool compile(const char *source, Chunk *chunk) {
+ObjFunction *compile(const char *source) {
     initScanner(source);
     Compiler compiler;
-    initCompiler(&compiler);
-    compilingChunk = chunk;
+    initCompiler(&compiler, TYPE_SCRIPT);
 
     parser.hadError = false;
     parser.panicMode = false;
@@ -1088,7 +1112,6 @@ bool compile(const char *source, Chunk *chunk) {
         declaration();
     }
 
-    endCompiler();
-
-    return !parser.hadError;
+    ObjFunction *function = endCompiler();
+    return parser.hadError ? NULL : function;
 }

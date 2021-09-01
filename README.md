@@ -7,7 +7,7 @@ by me as I go.
 I already read the whole book. I found it very interesting. I am planning to try to implement a full-featured language.
 It will take quite some time, but I have a list of features in mind. Nothing special, I just want to learn things.
 
-Reached chapter 24.2
+Reached chapter 24.4
 
 **TO-DO**
 
@@ -115,6 +115,8 @@ My own:
 - UTF-8 for strings. *Have*. *Fun*.
 
 - Increase max control flow jump distance. Probably a set of three instructions will slightly improve speed.
+
+- I suppose the call frames array in the VM should be dynamic. This implies the stack has to be dynamic first.
 
 - There are various TODO in the code, which do not represent new features, mostly technical stuff that can probably be
   changed locally with no trouble.

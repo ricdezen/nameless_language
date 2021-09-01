@@ -4,12 +4,26 @@
 #include "chunk.h"
 #include "value.h"
 #include "table.h"
+#include "object.h"
 
-#define STACK_MAX 256
+#define FRAMES_MAX 64
+#define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
+/**
+ * Representation of a single function call.
+ */
 typedef struct {
-    Chunk *chunk;           // The current code chunk.
-    uint8_t *ip;            // Instruction pointer. Where the "processor" is at.
+    ObjFunction *function;  // The function being called.
+    uint8_t *ip;            // Return address. Jump to here when the call ends.
+    Value *slots;           // Pointer to the first slot of the stack that this function owns.
+} CallFrame;
+
+/**
+ * Representation of the virtual machine.
+ */
+typedef struct {
+    CallFrame frames[FRAMES_MAX];   // Frames max.
+    int frameCount;
     Value stack[STACK_MAX]; // Value stack.
     Value *stackTop;        // Pointer to stack top.
     Table globals;          // Global variables. String names as keys, values as values.
