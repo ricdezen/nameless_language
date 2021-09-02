@@ -45,7 +45,7 @@ typedef struct {
     int size;               // Number of elements currently stored in the chunk.
     int capacity;           // Maximum number of elements that can be stored (length of array `code` points to).
     uint8_t *code;          // Pointer to dynamic array of bytes.
-    int *lines;              // Array with the code lines for each byte of code.
+    int *lines;             // Array with the code lines for each byte of code.
     ValueArray constants;   // Array of constants used in the chunk (numbers etc.).
 } Chunk;
 
