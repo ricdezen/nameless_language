@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <time.h>
 
 #include "compiler.h"
 #include "object.h"
@@ -11,6 +12,13 @@
 
 // Just a global member.
 VM vm;
+
+/**
+ * Return the seconds from the epoch.
+ */
+static Value clockNative(int argCount, Value *args) {
+    return NUMBER_VAL((double) clock() / CLOCKS_PER_SEC);
+}
 
 /**
  * Helper function to reset a vm's stack.
@@ -50,11 +58,29 @@ static void runtimeError(const char *format, ...) {
     resetStack();
 }
 
+/**
+ * Add a native function binding.
+ *
+ * @param name The name of the function in the global namespace.
+ * @param function The C function containing the implementation.
+ */
+static void defineNative(const char *name, NativeFn function) {
+    // We're putting the objects in the stack to avoid garbage collection.
+    push(OBJ_VAL(copyString(name, (int) strlen(name))));
+    push(OBJ_VAL(newNative(function)));
+    tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+    pop();
+    pop();
+}
+
 void initVM() {
     resetStack();
     vm.objects = NULL;
     initTable(&vm.globals);
     initTable(&vm.strings);
+
+    // Temporary solution to define natives.
+    defineNative("clock", clockNative);
 }
 
 void freeVM() {
@@ -120,6 +146,13 @@ static bool callValue(Value callee, int argCount) {
         switch (OBJ_TYPE(callee)) {
             case OBJ_FUNCTION:
                 return call(AS_FUNCTION(callee), argCount);
+            case OBJ_NATIVE: {
+                NativeFn native = AS_NATIVE(callee);
+                Value result = native(argCount, vm.stackTop - argCount);
+                vm.stackTop -= argCount + 1;
+                push(result);
+                return true;
+            }
             default:
                 break; // Non-callable object type.
         }
@@ -313,9 +346,11 @@ static InterpretResult run() {
                 vm.frameCount--;
                 // Last stack -> program is done.
                 if (vm.frameCount == 0) {
+                    // Pop reserved main stack slot.
                     pop();
                     return INTERPRET_OK;
                 }
+                // Push the result after coming back and removing the function call from the stack.
                 vm.stackTop = frame->slots;
                 push(result);
                 frame = &vm.frames[vm.frameCount - 1];

@@ -16,6 +16,11 @@
 #define IS_FUNCTION(value)     isObjType(value, OBJ_FUNCTION)
 
 /**
+ * Check if the Value is a native function object.
+ */
+#define IS_NATIVE(value)       isObjType(value, OBJ_NATIVE)
+
+/**
  * Check if the Value is a string object.
  */
 #define IS_STRING(value)       isObjType(value, OBJ_STRING)
@@ -24,6 +29,11 @@
  * Don't cast without checking etc.
  */
 #define AS_FUNCTION(value)     ((ObjFunction*)AS_OBJ(value))
+
+/**
+ * Don't cast without checking etc.
+ */
+#define AS_NATIVE(value) (((ObjNative*)AS_OBJ(value))->function)
 
 /**
  * Should I repeat myself again about the shadow realm and whatnot?
@@ -36,6 +46,7 @@
  */
 typedef enum {
     OBJ_FUNCTION,
+    OBJ_NATIVE,
     OBJ_STRING,
 } ObjType;
 
@@ -58,6 +69,19 @@ typedef struct {
 } ObjFunction;
 
 /**
+ * C function to be called from a binding. Takes a pointer to its first argument and how many arguments were passed.
+ */
+typedef Value (*NativeFn)(int argCount, Value *args);
+
+/**
+ * Structure for a native function.
+ */
+typedef struct {
+    Obj obj;
+    NativeFn function;
+} ObjNative;
+
+/**
  * Notice the Obj field is first. This is fundamental to allow down-casting from an Obj structure that we assert
  * contains a string, to an ObjString structure.
  */
@@ -74,6 +98,14 @@ struct ObjString {
  * @return An allocated ObjFunction.
  */
 ObjFunction *newFunction();
+
+/**
+ * Allocate a new native function binding.
+ *
+ * @param function The function to bind.
+ * @return The ObjNative object.
+ */
+ObjNative *newNative(NativeFn function);
 
 /**
  * Take a string and put it in an object after copying it.
