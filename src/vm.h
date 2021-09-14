@@ -13,7 +13,7 @@
  * Representation of a single function call.
  */
 typedef struct {
-    ObjFunction *function;  // The function being called.
+    ObjClosure *closure;    // The function (closure) being called.
     uint8_t *ip;            // Return address. Jump to here when the call ends.
     Value *slots;           // Pointer to the first slot of the stack that this function owns.
 } CallFrame;

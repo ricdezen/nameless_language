@@ -21,6 +21,8 @@ typedef enum {
     OP_GET_GLOBAL,      // Get a global variable's name. Push the value of the variable to the stack.
     OP_DEFINE_GLOBAL,   // Define a global variable. This is a statement therefore pops the value from the stack.
     OP_SET_GLOBAL,      // Set a global variable. Since it is an expression, it does not pop from the stack, looks only.
+    OP_GET_UPVALUE,     // Get an up-value's value. Push the value onto the stack.
+    OP_SET_UPVALUE,     // Set an up-value's value. It is an expression, it does not pop from the stack.
     OP_EQUAL,           // (==) Pops the last two values and returns whether they are equal.
     OP_GREATER,         // (>) Pops the last two values a and b and returns whether a > b (boolean).
     OP_LESS,            // (<) Pops the last two values a and b and returns whether a < b (boolean).
@@ -35,6 +37,7 @@ typedef enum {
     OP_JUMP_IF_FALSE,   // Jump if the last value on the stack is false. Takes 2-byte operand. Does not pop.
     OP_LOOP,            // Jump backwards. Takes 2-byte operand, which is how many bytes to jump backwards.
     OP_CALL,            // Call an object. Does not need to pop.
+    OP_CLOSURE,         //
     OP_RETURN,          // Pop the value at the top of the stack.
 } OpCode;
 

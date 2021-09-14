@@ -11,6 +11,11 @@
 #define OBJ_TYPE(value)        (AS_OBJ(value)->type)
 
 /**
+ * Check if the Value is a Closure object.
+ */
+#define IS_CLOSURE(value)      isObjType(value, OBJ_CLOSURE)
+
+/**
  * Check if the Value is a function object.
  */
 #define IS_FUNCTION(value)     isObjType(value, OBJ_FUNCTION)
@@ -24,6 +29,11 @@
  * Check if the Value is a string object.
  */
 #define IS_STRING(value)       isObjType(value, OBJ_STRING)
+
+/**
+ * Don't cast without checking etc.
+ */
+#define AS_CLOSURE(value)      ((ObjClosure*)AS_OBJ(value))
 
 /**
  * Don't cast without checking etc.
@@ -45,6 +55,7 @@
  * First order object types.
  */
 typedef enum {
+    OBJ_CLOSURE,
     OBJ_FUNCTION,
     OBJ_NATIVE,
     OBJ_STRING,
@@ -64,6 +75,7 @@ struct Obj {
 typedef struct {
     Obj obj;            // The base Object structure.
     int arity;          // How many parameters the function takes.
+    int upvalueCount;   // How many up-values the function references.
     Chunk chunk;        // The code of the function.
     ObjString *name;    // The string name of the function.
 } ObjFunction;
@@ -91,6 +103,19 @@ struct ObjString {
     int length;
     char *chars;
 };
+
+typedef struct {
+    Obj obj;
+    ObjFunction *function;
+} ObjClosure;
+
+/**
+ * Allocate a new Closure Object.
+ *
+ * @param function The function object to enclose.
+ * @return A Closure object.
+ */
+ObjClosure *newClosure(ObjFunction *function);
 
 /**
  * Allocate a new function Object.
