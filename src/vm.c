@@ -171,9 +171,9 @@ static bool callValue(Value callee, int argCount) {
 static ObjUpvalue *captureUpvalue(Value *local) {
     ObjUpvalue *prevUpvalue = NULL;
     ObjUpvalue *upvalue = vm.openUpvalues;
-    // TODO why > ?
     // Loop through the upvalues until the list is over
     // Or we found the position for the new upvalue.
+    // > can be used because values are physically in the stack.
     while (upvalue != NULL && upvalue->location > local) {
         prevUpvalue = upvalue;
         upvalue = upvalue->next;
@@ -194,6 +194,20 @@ static ObjUpvalue *captureUpvalue(Value *local) {
         prevUpvalue->next = createdUpvalue;
 
     return createdUpvalue;
+}
+
+/**
+ * Close upvalues instead of only popping.
+ *
+ * @param last The last upvalue to close.
+ */
+static void closeUpvalues(Value *last) {
+    while (vm.openUpvalues != NULL && vm.openUpvalues->location >= last) {
+        ObjUpvalue *upvalue = vm.openUpvalues;
+        upvalue->closed = *upvalue->location;
+        upvalue->location = &upvalue->closed;
+        vm.openUpvalues = upvalue->next;
+    }
 }
 
 /**
@@ -405,9 +419,17 @@ static InterpretResult run() {
                 }
                 break;
             }
+            case OP_CLOSE_UPVALUE: {
+                closeUpvalues(vm.stackTop - 1);
+                pop();
+                break;
+            }
             case OP_RETURN: {
                 // Pop the result, the last value the function left on the stack is its return.
                 Value result = pop();
+                // Close the upvalues.
+                closeUpvalues(frame->slots);
+                // Drop the function frame.
                 vm.frameCount--;
                 // Last stack -> program is done.
                 if (vm.frameCount == 0) {

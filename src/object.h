@@ -111,6 +111,7 @@ struct ObjString {
 typedef struct ObjUpvalue {
     Obj obj;
     Value *location;
+    Value closed;
     struct ObjUpvalue *next;    // Intrusive linked list. Used to keep track of all upvalues to avoid having duplicates.
 } ObjUpvalue;
 

@@ -8,7 +8,7 @@ I already read the whole book. I found it very interesting. I am planning to try
 It will take quite some time, but I have a list of features in mind. Nothing special, this is not going to be the new
 Python, I just want to learn things.
 
-Reached chapter 25.3
+Reached chapter 26
 
 **TO-DO**
 
@@ -101,6 +101,10 @@ Book exercises:
 - Add arity checking to function calls.
 
 - Add possibility to report runtime errors to function calls.
+
+- Only wrap functions in closures if they do capture a value.
+
+- Consider whether a loop should create a new variable at each iteration or not.
 
 My own:
 
