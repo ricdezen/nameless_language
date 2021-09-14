@@ -26,6 +26,7 @@ static Value clockNative(int argCount, Value *args) {
 static void resetStack() {
     vm.stackTop = vm.stack;
     vm.frameCount = 0;
+    vm.openUpvalues = NULL;
 }
 
 /**
@@ -128,8 +129,8 @@ static bool call(ObjClosure *closure, int argCount) {
     }
 
     CallFrame *frame = &vm.frames[vm.frameCount++]; // Prepare the next frame.
-    frame->closure = closure->function;                     // Set the function.
-    frame->ip = closure->function->chunk.code;               // Set the instruction pointer.
+    frame->closure = closure;                       // Set the function.
+    frame->ip = closure->function->chunk.code;      // Set the instruction pointer.
     frame->slots = vm.stackTop - argCount - 1;      // Point at where the arguments begin (argument 0 is callee).
     return true;
 }
@@ -159,6 +160,40 @@ static bool callValue(Value callee, int argCount) {
     }
     runtimeError("Can only call functions and classes.");
     return false;
+}
+
+/**
+ * Initialize a new upvalue pointing to an existing runtime value.
+ *
+ * @param local The Value to point to.
+ * @return An upvalue.
+ */
+static ObjUpvalue *captureUpvalue(Value *local) {
+    ObjUpvalue *prevUpvalue = NULL;
+    ObjUpvalue *upvalue = vm.openUpvalues;
+    // TODO why > ?
+    // Loop through the upvalues until the list is over
+    // Or we found the position for the new upvalue.
+    while (upvalue != NULL && upvalue->location > local) {
+        prevUpvalue = upvalue;
+        upvalue = upvalue->next;
+    }
+
+    // Found the upvalue.
+    if (upvalue != NULL && upvalue->location == local) {
+        return upvalue;
+    }
+
+    ObjUpvalue *createdUpvalue = newUpvalue(local);
+    createdUpvalue->next = upvalue;
+
+    // Created first upvalue.
+    if (prevUpvalue == NULL)
+        vm.openUpvalues = createdUpvalue;
+    else
+        prevUpvalue->next = createdUpvalue;
+
+    return createdUpvalue;
 }
 
 /**
@@ -271,6 +306,18 @@ static InterpretResult run() {
                 }
                 break;
             }
+            case OP_GET_UPVALUE: {
+                // Get an upvalue.
+                uint8_t slot = READ_BYTE();
+                push(*frame->closure->upvalues[slot]->location);
+                break;
+            }
+            case OP_SET_UPVALUE: {
+                // Get an upvalue.
+                uint8_t slot = READ_BYTE();
+                *frame->closure->upvalues[slot]->location = peek(0);
+                break;
+            }
             case OP_EQUAL: {
                 Value b = pop();
                 Value a = pop();
@@ -346,6 +393,16 @@ static InterpretResult run() {
                 // Capture the local variables it referred to.
                 ObjClosure *closure = newClosure(function);
                 push(OBJ_VAL(closure));
+                // Load the upvalues.
+                for (int i = 0; i < closure->upvalueCount; i++) {
+                    uint8_t isLocal = READ_BYTE();
+                    uint8_t index = READ_BYTE();
+                    if (isLocal) {
+                        closure->upvalues[i] = captureUpvalue(frame->slots + index);
+                    } else {
+                        closure->upvalues[i] = frame->closure->upvalues[index];
+                    }
+                }
                 break;
             }
             case OP_RETURN: {

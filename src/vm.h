@@ -22,13 +22,14 @@ typedef struct {
  * Representation of the virtual machine.
  */
 typedef struct {
-    CallFrame frames[FRAMES_MAX];   // Frames max.
+    CallFrame frames[FRAMES_MAX];   // Static array of CallFrames. 64 maximum recursion levels.
     int frameCount;
-    Value stack[STACK_MAX]; // Value stack.
-    Value *stackTop;        // Pointer to stack top.
-    Table globals;          // Global variables. String names as keys, values as values.
-    Table strings;          // Hashtable containing strings, for interning.
-    Obj *objects;           // As a temporary solution, a linked list of objects.
+    Value stack[STACK_MAX];         // Value stack.
+    Value *stackTop;                // Pointer to stack top.
+    Table globals;                  // Global variables. String names as keys, values as values.
+    Table strings;                  // Hashtable containing strings, for interning.
+    ObjUpvalue *openUpvalues;       // List of upvalues. Must be kept sorted by stack slot index.
+    Obj *objects;                   // As a temporary solution, a linked list of objects.
 } VM;
 
 extern VM vm;

@@ -68,8 +68,9 @@ typedef struct {
  * Represents a local variable.
  */
 typedef struct {
-    Token name;
-    int depth;
+    Token name;         // The identifier for the variable.
+    int depth;          // The scope depth of the variable.
+    bool isCaptured;    // Whether this variable is an upvalue somewhere.
 } Local;
 
 /**
@@ -93,7 +94,7 @@ typedef enum {
  * properly place them in the code. In order to compile a function, each compiler keeps track of it. To compile a script
  * we consider it as implicitly included inside a "main" Function.
  */
-typedef struct {
+typedef struct Compiler {
     struct Compiler *enclosing; // The enclosing Compiler.
     ObjFunction *function;      // The function (or script) being compiled.
     FunctionType type;          // The type of function being compiled (fun or script).
@@ -363,7 +364,7 @@ static void or_(bool canAssign) {
  * @param type The type of function compiled by this compiler.
  */
 static void initCompiler(Compiler *compiler, FunctionType type) {
-    compiler->enclosing = (struct Compiler *) current;  // TODO I know this cast is fine, but is there no better way?
+    compiler->enclosing = current;
     compiler->function = NULL;
     compiler->type = type;
     compiler->localCount = 0;
@@ -380,6 +381,7 @@ static void initCompiler(Compiler *compiler, FunctionType type) {
     // Take ownership of the first Local. Give it an empty name to avoid user writing on it.
     Local *local = &current->locals[current->localCount++];
     local->depth = 0;
+    local->isCaptured = false;
     local->name.start = "";
     local->name.length = 0;
 }
@@ -401,7 +403,7 @@ static ObjFunction *endCompiler() {
 #endif
 
     // Go back to compiling the outer block.
-    current = (Compiler *) current->enclosing;  // TODO I know this cast is fine, but is there no better way?
+    current = current->enclosing;
 
     return function;
 
@@ -481,13 +483,14 @@ static int resolveUpvalue(Compiler *compiler, Token *name) {
     if (compiler->enclosing == NULL) return -1;
 
     // If the upvalue is a local in the enclosing function.
-    int local = resolveLocal((Compiler *) compiler->enclosing, name);
+    int local = resolveLocal(compiler->enclosing, name);
     if (local != -1) {
+        compiler->enclosing->locals[local].isCaptured = true;
         return addUpvalue(compiler, (uint8_t) local, true);
     }
 
     // If the upvalue is an upvalue in the enclosing function.
-    int upvalue = resolveUpvalue((Compiler *) compiler->enclosing, name);
+    int upvalue = resolveUpvalue(compiler->enclosing, name);
     if (upvalue != -1) {
         return addUpvalue(compiler, (uint8_t) upvalue, false);
     }
@@ -507,7 +510,12 @@ static void endScope() {
     current->scopeDepth--;
 
     while (current->localCount > 0 && current->locals[current->localCount - 1].depth > current->scopeDepth) {
-        emitByte(OP_POP);
+        // Close upvalues, and pop the rest of the locals immediately.
+        if (current->locals[current->localCount - 1].isCaptured) {
+            emitByte(OP_CLOSE_UPVALUE);
+        } else {
+            emitByte(OP_POP);
+        }
         current->localCount--;
     }
 }
@@ -914,7 +922,8 @@ static void addLocal(Token name) {
 
     Local *local = &current->locals[current->localCount++];
     local->name = name;
-    local->depth = -1;  // -1 implies un-initialized state.
+    local->depth = -1;          // -1 implies un-initialized state.
+    local->isCaptured = false;
 }
 
 /**

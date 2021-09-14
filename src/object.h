@@ -59,6 +59,7 @@ typedef enum {
     OBJ_FUNCTION,
     OBJ_NATIVE,
     OBJ_STRING,
+    OBJ_UPVALUE
 } ObjType;
 
 /**
@@ -104,9 +105,20 @@ struct ObjString {
     char *chars;
 };
 
+/**
+ * Representation of an Upvalue.
+ */
+typedef struct ObjUpvalue {
+    Obj obj;
+    Value *location;
+    struct ObjUpvalue *next;    // Intrusive linked list. Used to keep track of all upvalues to avoid having duplicates.
+} ObjUpvalue;
+
 typedef struct {
     Obj obj;
     ObjFunction *function;
+    ObjUpvalue **upvalues;
+    int upvalueCount;
 } ObjClosure;
 
 /**
@@ -140,6 +152,14 @@ ObjNative *newNative(NativeFn function);
  * @return An object containing the string.
  */
 ObjString *copyString(const char *chars, int length);
+
+/**
+ * Allocate space for new upvalue.
+ *
+ * @param slot Pointer to the value in the stack.
+ * @return The new Upvalue.
+ */
+ObjUpvalue *newUpvalue(Value *slot);
 
 /**
  * Like `copyString` but takes ownership of the given string.

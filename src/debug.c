@@ -125,7 +125,7 @@ int disassembleInstruction(Chunk *chunk, int offset) {
             printValue(chunk->constants.values[constant]);
             printf("\n");
 
-            ObjFunction* function = AS_FUNCTION(
+            ObjFunction *function = AS_FUNCTION(
                     chunk->constants.values[constant]);
             for (int j = 0; j < function->upvalueCount; j++) {
                 int isLocal = chunk->code[offset++];
@@ -136,6 +136,8 @@ int disassembleInstruction(Chunk *chunk, int offset) {
 
             return offset;
         }
+        case OP_CLOSE_UPVALUE:
+            return simpleInstruction("OP_CLOSE_UPVALUE", offset);
         case OP_RETURN:
             return simpleInstruction("OP_RETURN", offset);
         default:
