@@ -90,7 +90,7 @@ typedef enum {
 } FunctionType;
 
 /**
- * Structure representing the Compiler. It keeps track of the local variables, in order to simulate the stack and
+ * Structure representing a Compiler. It keeps track of the local variables, in order to simulate the stack and
  * properly place them in the code. In order to compile a function, each compiler keeps track of it. To compile a script
  * we consider it as implicitly included inside a "main" Function.
  */

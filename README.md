@@ -108,6 +108,13 @@ Book exercises:
 
 My own:
 
+- Implement Stack, List etc. separately from the rest of the structures. Take care to make two versions of the List, one
+  avoids being managed by garbage collection so that it can be used during garbage collection itself and for the value
+  stack.
+
+- To avoid having so many pointer indirections it could be useful to have a set of cached fields in the VM structure,
+  such as call frames, constant tables etc.
+
 - Change the virtual machine from a global to something that can be created and passed around. This implies modifying
   every method that references `vm` to take a `VM`-type argument.
 
@@ -126,7 +133,7 @@ My own:
 
 - Some operators such as `!=`, `>=`, `<=` are syntactic sugar. Implement them with a dedicated instruction.
 
-- Other famous operators: `>>`, `<<`, `**`, `++`, `--`, `//`, `+=`, `-=`, `*=`, `/=`, `[]`, `()`.
+- Other common operators: `>>`, `<<`, `**`, `++`, `--`, `//`, `+=`, `-=`, `*=`, `/=`, `[]`, `()`.
 
 - Adjust falseness. In order to add operator overloading, the best idea is probably to do what Python did (special
   methods).

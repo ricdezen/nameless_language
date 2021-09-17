@@ -65,7 +65,7 @@ typedef struct {
 #define AS_OBJ(value)     ((value).as.obj)
 
 /**
- * Three macros for Value type checking. In case you have not read so yet, If you do not use these before a AS_X call,
+ * Macros for Value type checking. In case you have not read so yet, If you do not use these before a AS_X call,
  * you risk some The end of Evangelion level mumbo jumbo. You can obviously check the Value's type directly, with an if
  * or switch, whatever does it for you.
  */
