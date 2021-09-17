@@ -4,6 +4,17 @@
 #include "vm.h"
 #include "object.h"
 
-ObjFunction* compile(const char* source);
+/**
+ * Compile source into a Function.
+ *
+ * @param source The source to compile.
+ * @return The compiled function.
+ */
+ObjFunction *compile(const char *source);
+
+/**
+ * Mark the Values that are needed by the compiler.
+ */
+void markCompilerRoots();
 
 #endif

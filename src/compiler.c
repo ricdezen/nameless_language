@@ -5,6 +5,7 @@
 #include "common.h"
 #include "compiler.h"
 #include "scanner.h"
+#include "memory.h"
 
 #ifdef DEBUG_PRINT_CODE
 
@@ -1310,4 +1311,15 @@ ObjFunction *compile(const char *source) {
 
     ObjFunction *function = endCompiler();
     return parser.hadError ? NULL : function;
+}
+
+/**
+ * The only object the compiler needs to hang onto is the function it is compiling.
+ */
+void markCompilerRoots() {
+    Compiler *compiler = current;
+    while (compiler != NULL) {
+        markObject((Obj *) compiler->function);
+        compiler = compiler->enclosing;
+    }
 }

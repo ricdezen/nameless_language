@@ -58,6 +58,27 @@
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
 
 /**
+ * Mark an Object as reachable during garbage collection.
+ *
+ * @param object The Object to mark.
+ */
+void markObject(Obj *object);
+
+/**
+ * Mark a Value as reachable during garbage collection. Ignores Values corresponding to Numbers, Booleans and Nil, since
+ * they are not allocated on the heap.
+ *
+ * @param value The value to mark.
+ */
+void markValue(Value value);
+
+/**
+ * Start garbage collection. The algorithm is a simple mark and sweep. Visits all the objects and remove the ones that
+ * are not reachable from the roots.
+ */
+void collectGarbage();
+
+/**
  * Free the linked list of objects of the vm.
  */
 void freeObjects();

@@ -8,7 +8,7 @@ I already read the whole book. I found it very interesting. I am planning to try
 It will take quite some time, but I have a list of features in mind. Nothing special, this is not going to be the new
 Python, I just want to learn things.
 
-Reached chapter 26
+Reached chapter 26.4
 
 **TO-DO**
 
