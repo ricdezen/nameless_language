@@ -1,9 +1,6 @@
-#include <stdlib.h>
-#include <stdio.h>
-
-#include "vm.h"
 #include "chunk.h"
 #include "memory.h"
+#include "vm.h"
 
 void initChunk(Chunk *chunk) {
     chunk->size = 0;

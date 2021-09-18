@@ -3,12 +3,10 @@
 #include <string.h>
 #include <time.h>
 
-#include "compiler.h"
-#include "object.h"
-#include "memory.h"
-#include "common.h"
-#include "debug.h"
 #include "vm.h"
+#include "compiler.h"
+#include "memory.h"
+#include "debug.h"
 
 // Just a global member.
 VM vm;

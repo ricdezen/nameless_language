@@ -1,10 +1,7 @@
-#include <stdlib.h>
 #include <string.h>
 
-#include "memory.h"
-#include "object.h"
 #include "table.h"
-#include "value.h"
+#include "memory.h"
 
 /**
  * Load limit for an hashtable. Needs to be between 0 and 1.

@@ -2,10 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "vm.h"
 #include "debug.h"
-#include "value.h"
-#include "object.h"
+#include "vm.h"
 
 /**
  * Helper function to print an instruction that only has a name and no parameters.
