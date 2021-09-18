@@ -8,7 +8,7 @@ I already read the whole book. I found it very interesting. I am planning to try
 It will take quite some time, but I have a list of features in mind. Nothing special, this is not going to be the new
 Python, I just want to learn things.
 
-Reached chapter 29
+Reached chapter 30
 
 **TO-DO**
 
@@ -39,9 +39,7 @@ Book exercises:
 
 - Implement ternary operator `condition ? then : else`. Mind precedence and associativity.
 
-- Add error productions to handle each binary operator appearing without a left-hand operand. In other words, detect a
-  binary operator appearing at the beginning of an expression. Report that as an error, but also parse and discard a
-  right-hand operand with the appropriate precedence.
+- > Add error productions to handle each binary operator appearing without a left-hand operand. In other words, detect a binary operator appearing at the beginning of an expression. Report that as an error, but also parse and discard a right-hand operand with the appropriate precedence.
 
 - Implement bitwise and (`&`), or (`|`) and xor (`^`). Mind precedence (C's is not really cool, check note in book).
 
@@ -76,31 +74,16 @@ Book exercises:
 - ~~Add other values as keys in the hash table.~~ I'll change this to: add hash to any object. I do not really dig NaN
   boxing, so I would have those 4 spare bytes inside the Value structure.
 
-- The compiler adds a global variable’s name to the constant table as a string every time an identifier is encountered.
-  It creates a new constant each time, even if that variable name is already in a previous slot in the constant table.
-  That’s wasteful in cases where the same variable is referenced multiple times by the same function. That, in turn,
-  increases the odds of filling up the constant table and running out of slots since we allow only 256 constants in a
-  single chunk.
+- > The compiler adds a global variable’s name to the constant table as a string every time an identifier is encountered. It creates a new constant each time, even if that variable name is already in a previous slot in the constant table. That’s wasteful in cases where the same variable is referenced multiple times by the same function. That, in turn, increases the odds of filling up the constant table and running out of slots since we allow only 256 constants in a single chunk.
 
-- Looking up a global variable by name in a hash table each time it is used is pretty slow, even with a good hash table.
-  Can you come up with a more efficient way to store and access global variables without changing the semantics?
+- > Looking up a global variable by name in a hash table each time it is used is pretty slow, even with a good hash table. Can you come up with a more efficient way to store and access global variables without changing the semantics?
 
-- Our simple local array makes it easy to calculate the stack slot of each local variable. But it means that when the
-  compiler resolves a reference to a variable, we have to do a linear scan through the array. Come up with something
-  more efficient. Do you think the additional complexity is worth it?
+- > Our simple local array makes it easy to calculate the stack slot of each local variable. But it means that when the compiler resolves a reference to a variable, we have to do a linear scan through the array. Come up with something more efficient. Do you think the additional complexity is worth it?
 
 - Implement a switch statement. For this I think it would be easier for me to avoid fall-through. Another option would
   be to have both "match" (no fall-through) and "switch" (with fall-through).
 
-- Reading and writing the ip field is one of the most frequent operations inside the bytecode loop. Right now, we access
-  it through a pointer to the current CallFrame. That requires a pointer indirection which may force the CPU to bypass
-  the cache and hit main memory. That can be a real performance sink. Ideally, we’d keep the ip in a native CPU
-  register. C does not let us require that without dropping into inline assembly, but we can structure the code to
-  encourage the compiler to make that optimization. If we store the ip directly in a C local variable and mark it
-  register, there’s a good chance the C compiler will accede to our polite request. This does mean we need to be careful
-  to load and store the local ip back into the correct CallFrame when starting and ending function calls. Implement this
-  optimization. Write a couple of benchmarks and see how it affects the performance. Do you think the extra code
-  complexity is worth it?
+- > Reading and writing the ip field is one of the most frequent operations inside the bytecode loop. Right now, we access it through a pointer to the current CallFrame. That requires a pointer indirection which may force the CPU to bypass the cache and hit main memory. That can be a real performance sink. Ideally, we’d keep the ip in a native CPU register. C does not let us require that without dropping into inline assembly, but we can structure the code to encourage the compiler to make that optimization. If we store the ip directly in a C local variable and mark it register, there’s a good chance the C compiler will accede to our polite request. This does mean we need to be careful to load and store the local ip back into the correct CallFrame when starting and ending function calls. Implement this optimization. Write a couple of benchmarks and see how it affects the performance. Do you think the extra code complexity is worth it?
 
 - Add arity checking to native function calls.
 
@@ -122,13 +105,13 @@ Book exercises:
   obj has x;
   ```
 
-- Because fields are accessed by name at runtime, working with instance state is slow. It’s technically a constant-time
-  operation—thanks, hash tables—but the constant factors are relatively large. This is a major component of why dynamic
-  languages are slower than statically typed ones. How do sophisticated implementations of dynamically typed languages
-  cope with and optimize this?
+- > Because fields are accessed by name at runtime, working with instance state is slow. It’s technically a constant-time operation—thanks, hash tables—but the constant factors are relatively large. This is a major component of why dynamic languages are slower than statically typed ones. How do sophisticated implementations of dynamically typed languages cope with and optimize this?
 
 - Optimize `init` method lookup. I was thinking of giving each class a structure with the overridable things, such as
   operators etc.
+
+- Find a way to ensure an object remains in a valid state along the inheritance chain. Maybe dividing fields in public
+  and private can make sense.
 
 My own:
 

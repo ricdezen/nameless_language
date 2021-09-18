@@ -25,6 +25,7 @@ typedef enum {
     OP_SET_UPVALUE,     // Set an up-value's value. It is an expression, it does not pop from the stack.
     OP_GET_PROPERTY,    // Get an object's property. Takes field name operand. Pops an object from the stack and pushes the value.
     OP_SET_PROPERTY,    // Set an object's property. Takes field name operand. Pops object and value, assigns, then pushes the value.
+    OP_GET_SUPER,       // Get a superclass' method. Takes field name operand. Pops class from stack.
     OP_EQUAL,           // (==) Pops the last two values and returns whether they are equal.
     OP_GREATER,         // (>) Pops the last two values a and b and returns whether a > b (boolean).
     OP_LESS,            // (<) Pops the last two values a and b and returns whether a < b (boolean).
@@ -39,10 +40,12 @@ typedef enum {
     OP_JUMP_IF_FALSE,   // Jump if the last value on the stack is false. Takes 2-byte operand. Does not pop.
     OP_LOOP,            // Jump backwards. Takes 2-byte operand, which is how many bytes to jump backwards.
     OP_CALL,            // Call an object. Does not need to pop.
-    OP_INVOKE,          // Call a
+    OP_INVOKE,          // Invoke a method. Take method name operand and argument count operand.
+    OP_SUPER_INVOKE,    // Invoke a method from the superclass. Take method name operand and argument count operand.
     OP_CLOSURE,         // Make a Closure. Capture the necessary upvalues.
     OP_CLOSE_UPVALUE,   // Close over an upvalue instead of only popping it.
     OP_CLASS,           // Declare a class. Next operand is the class's name.
+    OP_INHERIT,         // Take last class and add all methods of second to last class to it, then pop the subclass.
     OP_METHOD,          // Declare a method. Pop last value and put it in the second to last value's methods table.
     OP_RETURN,          // Pop the value at the top of the stack.
 } OpCode;
