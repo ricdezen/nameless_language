@@ -71,7 +71,7 @@ Book exercises:
 - We always copy the string when allocating the objects. It could be interesting to add support for strings that don't
   own their character array, but instead point to some non-freeable location. Maybe like the constant table.
 
-- ~~Add other values as keys in the hash table.~~ I'll change this to: add has to any object. I do not really dig NaN
+- ~~Add other values as keys in the hash table.~~ I'll change this to: add hash to any object. I do not really dig NaN
   boxing, so I would have those 4 spare bytes inside the Value structure.
 
 - The compiler adds a global variable’s name to the constant table as a string every time an identifier is encountered.
@@ -87,7 +87,8 @@ Book exercises:
   compiler resolves a reference to a variable, we have to do a linear scan through the array. Come up with something
   more efficient. Do you think the additional complexity is worth it?
 
-- Implement a switch statement. For this I think it would be easier for me to avoid fall-through.
+- Implement a switch statement. For this I think it would be easier for me to avoid fall-through. Another option would
+  be to have both "match" (no fall-through) and "switch" (with fall-through).
 
 - Reading and writing the ip field is one of the most frequent operations inside the bytecode loop. Right now, we access
   it through a pointer to the current CallFrame. That requires a pointer indirection which may force the CPU to bypass
@@ -99,11 +100,12 @@ Book exercises:
   optimization. Write a couple of benchmarks and see how it affects the performance. Do you think the extra code
   complexity is worth it?
 
-- Add arity checking to function calls.
+- Add arity checking to native function calls.
 
 - Add possibility to report runtime errors to function calls.
 
-- Only wrap functions in closures if they do capture a value.
+- Only wrap functions in closures if they do capture a value **OR** make closure the standard implementation of a
+  function, since the main point is to avoid the pointer indirection.
 
 - Consider whether a loop should create a new variable at each iteration or not.
 
@@ -116,16 +118,16 @@ My own:
   stack.
 
 - To avoid having so many pointer indirections it could be useful to have a set of cached fields in the VM structure,
-  such as call frames, constant tables etc.
+  such as call frames, constant tables etc., which get changed only on frame switch.
 
 - Change the virtual machine from a global to something that can be created and passed around. This implies modifying
-  every method that references `vm` to take a `VM`-type argument.
+  every method that references `vm` to take a `VM`-type argument. Before doing this, consider whether it makes sense or
+  not. The main advantage is being able to run multi-threaded operations using multiple vms. I still can, by updating
+  the value of the vm variable, but then It would need to be a pointer, and the difference with passing such pointer
+  around is minimal.
 
-- Same for the Scanner.
-
-- Same for the Parser (and the concept of "current chunk" can probably be added to the parser).
-
-- You guessed it, same for the Compiler.
+- Scanner, Parser and Compiler can probably be subject to some of this treatment too, although their implementation
+  changed since I wrote this.
 
 - Change Strings to behave more like other languages. Look into UTF-8 and escape sequences.
 
@@ -134,18 +136,24 @@ My own:
 - I assume adding aliases for logical operators would be nice? Or at least uniform the style: I have `and`, `or` and `!`
   . So either turn `!` into `not`, turn `and`/`or` into `&&`/`||`, or keep all 6.
 
+- What about other logical operators? Such as xor, nand, implication etc.?
+
 - Some operators such as `!=`, `>=`, `<=` are syntactic sugar. Implement them with a dedicated instruction.
 
 - Other common operators: `>>`, `<<`, `**`, `++`, `--`, `//`, `+=`, `-=`, `*=`, `/=`, `[]`, `()`.
 
-- Adjust falseness. In order to add operator overloading, the best idea is probably to do what Python did (special
-  methods).
+- Add custom falseness. In order to add operator overloading in general, the best idea is probably to do what Python
+  did (special methods), although Ruby uses the operators themselves as method names, which may be confusing in case
+  of `()` overloading.
 
 - UTF-8 for strings. *Have*. *Fun*.
 
-- Increase max control flow jump distance. Probably a set of three instructions will slightly improve speed.
+- Increase max control flow jump distance. Probably a set of three instructions will slightly improve speed, like for
+  constants. My main assumption is that it is going to be roughly the same speed for any number of opcodes below 255.
 
-- I suppose the call frames array in the VM should be dynamic. This implies the stack has to be dynamic first.
+- I suppose the call frames array in the VM should be dynamic. This implies the stack has to be dynamic first. Is a hard
+  limit to call frames really necessary? Python has it, but I don't know if it is done in order to keep the stack as a
+  VM member, for speed, or some other reason.
 
 - The stack for gray objects in garbage collection is never reset, it can only increase in size.
 
