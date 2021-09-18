@@ -26,6 +26,8 @@ void *reallocate(void *pointer, size_t oldSize, size_t newSize) {
         }
     }
 
+    // While `realloc` does allow this behaviour, it would make
+    // it impossible for us to distinguish a freeing from running out of memory.
     if (newSize == 0) {
         free(pointer);
         return NULL;
@@ -57,7 +59,7 @@ void markObject(Obj *object) {
     // Resize gray stack if necessary.
     if (vm.grayCapacity < vm.grayCount + 1) {
         vm.grayCapacity = GROW_CAPACITY(vm.grayCapacity);
-        vm.grayStack = (Obj **) realloc(vm.grayStack, sizeof(Obj *) * vm.grayCapacity);
+        vm.grayStack = ALLOCATE_UNMANAGED(Obj*, vm.grayCapacity);
         // Allocation failure.
         if (vm.grayStack == NULL)
             exit(1);
@@ -300,5 +302,5 @@ void freeObjects() {
     }
 
     // Memory of the gray stack.
-    free(vm.grayStack);
+    FREE_UNMANAGED(vm.grayStack);
 }

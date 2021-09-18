@@ -1,19 +1,7 @@
-class Doughnut {
-  cook() {
-    print "Dunk in the fryer.";
-    this.finish("sprinkles");
-  }
+var a = "Paolo" + "Bersaglieri";
 
-  finish(ingredient) {
-    print "Finish with " + ingredient;
-  }
-}
+a = "Non quello di prima" + a;
 
-class Cruller < Doughnut {
-  finish(ingredient) {
-    // No sprinkles, always icing.
-    super.finish("icing");
-  }
-}
+a = "Dovrebbe cancellare almeno PaoloBersaglieri" + a;
 
-print Cruller().cook();
+print a;

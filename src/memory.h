@@ -5,7 +5,7 @@
 #include "object.h"
 
 /**
- * Macro to allocate memory for an array of values (and cast the pointer to some type).
+ * Macro to allocate memory for an array of values (and cast the pointer to the desired type).
  *
  * @param type The type to cast the pointer to.
  * @param count How many values.
@@ -13,12 +13,24 @@
 #define ALLOCATE(type, count) (type*)reallocate(NULL, 0, sizeof(type) * (count))
 
 /**
- * Free a generic pointer to an object.
+ * Same as `ALLOCATE` but this memory is not managed by garbage collection, and must be freed manually. Calls `realloc`
+ * from the standard library, meaning it can also be used in place of `GROW_ARRAY`.
+ * It is heavily advised to only use this for the dynamic array of gray objects during garbage collection.
+ */
+#define ALLOCATE_UNMANAGED(type, count) (type*)realloc(NULL, sizeof(type) * (count))
+
+/**
+ * Free a pointer.
  *
  * @param type The type of the object to free.
  * @param pointer Pointer to the object.
  */
 #define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
+
+/**
+ * Free a pointer to unmanaged memory.
+ */
+#define FREE_UNMANAGED(ptr) free(ptr)
 
 /**
  * Macro aimed to increase an array's size.
@@ -29,6 +41,8 @@
 #define GROW_CAPACITY(old) ((old) < 8 ? 8 : (old) * 2)
 
 /**
+ * Reallocate a dynamic array.
+ *
  * @param type The type of data. Used to get the size of the array.
  * @param pointer The pointer to the memory area.
  * @param oldCount The number of elements previously contained in the array.
@@ -38,9 +52,11 @@
     (type*)reallocate(pointer, sizeof(type) * (oldCount), sizeof(type) * (newCount))
 
 /**
+ * Free a dynamic array.
+ *
  * @param type The type of data. Used to get the size of the array.
  * @param pointer The pointer to the memory area.
- * @param oldCount The number of elements previously contained in the array.
+ * @param oldCount The previous array size.
  */
 #define FREE_ARRAY(type, pointer, oldCount) reallocate(pointer, sizeof(type) * (oldCount), 0)
 
@@ -49,6 +65,7 @@
  * Function to reallocate a dynamic memory block.
  * If newSize = 0, free the memory block.
  * Otherwise allocate (oldSize = 0) or reallocate a block of memory with size newSize.
+ * Can trigger garbage collection.
  *
  * @param pointer Pointer to the memory area.
  * @param oldSize The size the memory block had. If 0, allocate a new block.

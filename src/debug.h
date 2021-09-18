@@ -22,7 +22,7 @@ void disassembleChunk(Chunk *chunk, const char *name);
 int disassembleInstruction(Chunk *chunk, int offset);
 
 /**
- * Prints the token's type and value.
+ * Prints a token's type and value.
  *
  * @param token The token to print.
  */

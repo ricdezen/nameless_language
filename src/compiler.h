@@ -5,7 +5,7 @@
 #include "object.h"
 
 /**
- * Compile source into a Function.
+ * Compile source into an executable Function.
  *
  * @param source The source to compile.
  * @return The compiled function.

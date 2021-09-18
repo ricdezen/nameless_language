@@ -53,14 +53,14 @@ typedef enum {
 extern char *opCodeNames[];
 
 /**
- * Generic byte dynamic array. Generally used to contain the bytecode.
+ * Chunk of code. Contains a dynamic array of bytes and a ValueArray to hold the constants used in the chunk of code.
  */
 typedef struct {
     int size;               // Number of elements currently stored in the chunk.
     int capacity;           // Maximum number of elements that can be stored (length of array `code` points to).
     uint8_t *code;          // Pointer to dynamic array of bytes.
-    int *lines;             // Array with the code lines for each byte of code.
-    ValueArray constants;   // Array of constants used in the chunk (numbers etc.).
+    int *lines;             // Array with the code line for each byte of code.
+    ValueArray constants;   // Array of constants used in the chunk (numbers, strings, etc.).
 } Chunk;
 
 /**
