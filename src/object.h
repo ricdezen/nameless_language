@@ -4,59 +4,42 @@
 #include "common.h"
 #include "value.h"
 #include "chunk.h"
+#include "table.h"
 
 /**
  * Get an object's type. Check it actually is an Object, you forgetful buffoon.
  */
-#define OBJ_TYPE(value)        (AS_OBJ(value)->type)
+#define OBJ_TYPE(value)         (AS_OBJ(value)->type)
 
 /**
- * Check if the Value is a Closure object.
+ * Macros to check an Object's type.
  */
-#define IS_CLOSURE(value)      isObjType(value, OBJ_CLOSURE)
-
-/**
- * Check if the Value is a function object.
- */
-#define IS_FUNCTION(value)     isObjType(value, OBJ_FUNCTION)
-
-/**
- * Check if the Value is a native function object.
- */
-#define IS_NATIVE(value)       isObjType(value, OBJ_NATIVE)
-
-/**
- * Check if the Value is a string object.
- */
-#define IS_STRING(value)       isObjType(value, OBJ_STRING)
-
-/**
- * Don't cast without checking etc.
- */
-#define AS_CLOSURE(value)      ((ObjClosure*)AS_OBJ(value))
-
-/**
- * Don't cast without checking etc.
- */
-#define AS_FUNCTION(value)     ((ObjFunction*)AS_OBJ(value))
-
-/**
- * Don't cast without checking etc.
- */
-#define AS_NATIVE(value) (((ObjNative*)AS_OBJ(value))->function)
+#define IS_CLOSURE(value)       isObjType(value, OBJ_CLOSURE)
+#define IS_FUNCTION(value)      isObjType(value, OBJ_FUNCTION)
+#define IS_NATIVE(value)        isObjType(value, OBJ_NATIVE)
+#define IS_CLASS(value)         isObjType(value, OBJ_CLASS)
+#define IS_INSTANCE(value)      isObjType(value, OBJ_INSTANCE)
+#define IS_STRING(value)        isObjType(value, OBJ_STRING)
 
 /**
  * Should I repeat myself again about the shadow realm and whatnot?
  */
-#define AS_STRING(value)       ((ObjString*)AS_OBJ(value))
+#define AS_CLOSURE(value)       ((ObjClosure*)AS_OBJ(value))
+#define AS_FUNCTION(value)      ((ObjFunction*)AS_OBJ(value))
+#define AS_NATIVE(value)        (((ObjNative*)AS_OBJ(value))->function)
+#define AS_CLASS(value)         ((ObjClass*)AS_OBJ(value))
+#define AS_INSTANCE(value)     ((ObjInstance*)AS_OBJ(value))
+#define AS_STRING(value)        ((ObjString*)AS_OBJ(value))
 #define AS_C_STRING(value)      (((ObjString*)AS_OBJ(value))->chars)
 
 /**
  * First order object types.
  */
 typedef enum {
+    OBJ_CLASS,
     OBJ_CLOSURE,
     OBJ_FUNCTION,
+    OBJ_INSTANCE,
     OBJ_NATIVE,
     OBJ_STRING,
     OBJ_UPVALUE
@@ -116,12 +99,40 @@ typedef struct ObjUpvalue {
     struct ObjUpvalue *next;    // Intrusive linked list. Used to keep track of all upvalues to avoid having duplicates.
 } ObjUpvalue;
 
+/**
+ * Representation of a Closure.
+ */
 typedef struct {
     Obj obj;
     ObjFunction *function;
     ObjUpvalue **upvalues;
     int upvalueCount;
 } ObjClosure;
+
+/**
+ * Representation of a Class.
+ */
+typedef struct {
+    Obj obj;
+    ObjString *name;
+} ObjClass;
+
+/**
+ * Representation of a Class.
+ */
+typedef struct {
+    Obj obj;
+    ObjClass *klass;
+    Table fields;
+} ObjInstance;
+
+/**
+ * Allocate a new Class Object.
+ *
+ * @param name The name of the class.
+ * @return The class object.
+ */
+ObjClass *newClass(ObjString *name);
 
 /**
  * Allocate a new Closure Object.
@@ -137,6 +148,14 @@ ObjClosure *newClosure(ObjFunction *function);
  * @return An allocated ObjFunction.
  */
 ObjFunction *newFunction();
+
+/**
+ * Allocate a new Instance of a class.
+ *
+ * @param klass The object class.
+ * @return The allocated object.
+ */
+ObjInstance *newInstance(ObjClass *klass);
 
 /**
  * Allocate a new native function binding.

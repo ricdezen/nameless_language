@@ -8,7 +8,7 @@ I already read the whole book. I found it very interesting. I am planning to try
 It will take quite some time, but I have a list of features in mind. Nothing special, this is not going to be the new
 Python, I just want to learn things.
 
-Reached chapter 27
+Reached chapter 28
 
 **TO-DO**
 
@@ -59,7 +59,9 @@ Book exercises:
 
 - Implement [run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding) of line numbers.
 
-- Implement another (or another two) instruction to load more than 255 constants.
+- Implement another (or another two) instruction to load more than 255 constants. Consider that in some places, like
+  class declarations, you have a constant operand as well. Does it make sense to make multiple instructions in that case
+  as well, or should I find a way to use the stack?
 
 - Idem for other places where the 255 limit is in place (e.g. local variables).
 
@@ -110,6 +112,20 @@ Book exercises:
 - Consider whether a loop should create a new variable at each iteration or not.
 
 - Consider challenges 1, 2 and 3 of chapter 26 about GC optimization.
+
+- How to check if an object's field exists? I would add an `has` operator. Takes an identifier and returns true or
+  false.
+  ```js
+  var x = "Hello";
+  var obj = SomeClass();
+  // Am I looking for field "x" or field "Hello"?
+  obj has x;
+  ```
+
+- Because fields are accessed by name at runtime, working with instance state is slow. It’s technically a constant-time
+  operation—thanks, hash tables—but the constant factors are relatively large. This is a major component of why dynamic
+  languages are slower than statically typed ones. How do sophisticated implementations of dynamically typed languages
+  cope with and optimize this?
 
 My own:
 

@@ -23,6 +23,8 @@ typedef enum {
     OP_SET_GLOBAL,      // Set a global variable. Since it is an expression, it does not pop from the stack, looks only.
     OP_GET_UPVALUE,     // Get an up-value's value. Push the value onto the stack.
     OP_SET_UPVALUE,     // Set an up-value's value. It is an expression, it does not pop from the stack.
+    OP_GET_PROPERTY,    // Get an object's property. Takes field name operand. Pops an object from the stack and pushes the value.
+    OP_SET_PROPERTY,    // Set an object's property. Takes field name operand. Pops object and value, assigns, then pushes the value.
     OP_EQUAL,           // (==) Pops the last two values and returns whether they are equal.
     OP_GREATER,         // (>) Pops the last two values a and b and returns whether a > b (boolean).
     OP_LESS,            // (<) Pops the last two values a and b and returns whether a < b (boolean).
@@ -39,6 +41,7 @@ typedef enum {
     OP_CALL,            // Call an object. Does not need to pop.
     OP_CLOSURE,         // Make a Closure. Capture the necessary upvalues.
     OP_CLOSE_UPVALUE,   // Close over an upvalue instead of only popping it.
+    OP_CLASS,           // Declare a class. Next operand is the class's name.
     OP_RETURN,          // Pop the value at the top of the stack.
 } OpCode;
 
