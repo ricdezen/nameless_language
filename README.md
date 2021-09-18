@@ -152,8 +152,11 @@ My own:
   constants. My main assumption is that it is going to be roughly the same speed for any number of opcodes below 255.
 
 - I suppose the call frames array in the VM should be dynamic. This implies the stack has to be dynamic first. Is a hard
-  limit to call frames really necessary? Python has it, but I don't know if it is done in order to keep the stack as a
-  VM member, for speed, or some other reason.
+  limit to call frames really necessary? Python has it, ~~but I don't know if it is done in order to keep the stack as a
+  VM member, for speed, or some other reason.~~ Apparently the reason is mostly debugging, tail recursion optimization
+  erases the stack trace. A new keyword for a tail-recursion allowing method would make sense. A tail-recursive method
+  could keep also the original code so that in some kind of debug mode or testing environment one can decide which to
+  call to keep the stack. Maybe a built-in function that calls the original code, idk.
 
 - The stack for gray objects in garbage collection is never reset, it can only increase in size.
 
