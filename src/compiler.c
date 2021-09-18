@@ -98,19 +98,19 @@ typedef enum {
  * we consider it as implicitly included inside a "main" Function.
  */
 typedef struct Compiler {
-    struct Compiler *enclosing; // The enclosing Compiler.
-    ObjFunction *function;      // The function (or script) being compiled.
-    FunctionType type;          // The type of function being compiled (fun or script).
-    Local locals[UINT8_COUNT];  // Local variables stack.
-    int localCount;             // How many local variables are there.
-    Upvalue upvalues[UINT8_COUNT];
-    int scopeDepth;             // The depth of the scope, for local variable scope.
+    struct Compiler *enclosing;     // The enclosing Compiler.
+    ObjFunction *function;          // The function (or script) being compiled.
+    FunctionType type;              // The type of function being compiled (fun or script).
+    Local locals[UINT8_COUNT];      // Local variables stack.
+    int localCount;                 // How many local variables are there.
+    Upvalue upvalues[UINT8_COUNT];  // Compiled references to upvalues.
+    int scopeDepth;                 // The depth of the scope, for local variable scope.
 } Compiler;
 
 /**
  * Holds no particular logic, except the current class. Used cause we may want to nest classes.
  * Notice a global variable is used, but it is only ever accessed locally, on the stack. This works due to how the
- * compiler is made, be very careful modifying this.
+ * compiler is made, be very careful when modifying this behaviour.
  */
 typedef struct ClassCompiler {
     struct ClassCompiler *enclosing;
@@ -280,7 +280,8 @@ static int emitJump(uint8_t instruction) {
 }
 
 /**
- * Helper function that just outputs a return instruction.
+ * Compile an empty return. This should also be called for implicit returns (no returns).
+ * An initializer returns slots 0, that is, the value pointed by "this", other functions just return nil.
  */
 static void emitReturn() {
     emitByte(OP_NIL);

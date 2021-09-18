@@ -6,14 +6,14 @@
 
 /**
  * Enum for instruction bytecodes.
- * Is supposed to remain below 256 values.
+ * It is supposed to remain below 256 values.
  */
 typedef enum {
     OP_CONSTANT,        // Fetch a constant's value. One byte param: the index of the constant.
     OP_NIL,             // "nil" literal.
     OP_TRUE,            // "true" literal.
     OP_FALSE,           // "false" literal.
-    OP_POP,             // Just pop a value. Used for expression statements.
+    OP_POP,             // Just pop a value. An example usage is in expression statements.
     // OP_DEFINE_LOCAL     Not used because when defining a local variable, it just becomes the last stack value during
     //                     compile time so no extra operation is needed during runtime.
     OP_GET_LOCAL,       // Get a local variable. Push onto the stack the local corresponding to the next byte.
@@ -49,6 +49,8 @@ typedef enum {
     OP_METHOD,          // Declare a method. Pop last value and put it in the second to last value's methods table.
     OP_RETURN,          // Pop the value at the top of the stack.
 } OpCode;
+
+extern char *opCodeNames[];
 
 /**
  * Generic byte dynamic array. Generally used to contain the bytecode.
