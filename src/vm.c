@@ -78,6 +78,8 @@ void initVM() {
     vm.objects = NULL;
     initTable(&vm.globals);
     initTable(&vm.strings);
+    vm.initString = NULL;   // Since we allocate it dynamically, the gc may read it before initializing it.
+    vm.initString = copyString("init", 4);
 
     // GC stuff
     vm.grayCount = 0;
@@ -91,9 +93,10 @@ void initVM() {
 }
 
 void freeVM() {
-    freeObjects();
     freeTable(&vm.globals);
     freeTable(&vm.strings);
+    vm.initString = NULL;
+    freeObjects();
 }
 
 void push(Value value) {
@@ -151,9 +154,24 @@ static bool call(ObjClosure *closure, int argCount) {
 static bool callValue(Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
+            case OBJ_BOUND_METHOD: {
+                ObjBoundMethod *bound = AS_BOUND_METHOD(callee);
+                // Set this' value in slot 0 (relative to method's stack).
+                vm.stackTop[-argCount - 1] = bound->receiver;
+                return call(bound->method, argCount);
+            }
             case OBJ_CLASS: {
                 ObjClass *klass = AS_CLASS(callee);
                 vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
+                // Look for the initialized method. Run it if any.
+                Value initializer;
+                if (tableGet(&klass->methods, vm.initString, &initializer)) {
+                    return call(AS_CLOSURE(initializer), argCount);
+                } else if (argCount != 0) {
+                    // No initializer method -> can't pass arguments.
+                    runtimeError("Expected 0 arguments but got %d.", argCount);
+                    return false;
+                }
                 return true;
             }
             case OBJ_CLOSURE:
@@ -171,6 +189,73 @@ static bool callValue(Value callee, int argCount) {
     }
     runtimeError("Can only call functions and classes.");
     return false;
+}
+
+/**
+ * Call a method.
+ *
+ * @param klass The class.
+ * @param name The method's name.
+ * @param argCount The argument count.
+ * @return the result of `call`.
+ */
+static bool invokeFromClass(ObjClass *klass, ObjString *name, int argCount) {
+    Value method;
+    if (!tableGet(&klass->methods, name, &method)) {
+        runtimeError("Undefined property '%s'.", name->chars);
+        return false;
+    }
+    return call(AS_CLOSURE(method), argCount);
+}
+
+/**
+ * Invoke a method.
+ *
+ * @param name The name of the method.
+ * @param argCount The number of arguments.
+ * @return the result of `invokeFromClass`.
+ */
+static bool invoke(ObjString *name, int argCount) {
+    Value receiver = peek(argCount);
+
+    // Binding does something similar.
+    if (!IS_INSTANCE(receiver)) {
+        runtimeError("Only instances have methods.");
+        return false;
+    }
+    ObjInstance *instance = AS_INSTANCE(receiver);
+
+    // If a field in the object has been overwritten, call that instead.
+    Value value;
+    if (tableGet(&instance->fields, name, &value)) {
+        vm.stackTop[-argCount - 1] = value;
+        return callValue(value, argCount);
+    }
+
+    // Or just call the method.
+    return invokeFromClass(instance->klass, name, argCount);
+}
+
+/**
+ * Bind a method to an object.
+ *
+ * @param klass The class of the object.
+ * @param name The name of the method.
+ * @return True if the method was found and pushed, False otherwise.
+ */
+static bool bindMethod(ObjClass *klass, ObjString *name) {
+    Value method;
+    // No method -> can't bind.
+    if (!tableGet(&klass->methods, name, &method)) {
+        runtimeError("Undefined property '%s'.", name->chars);
+        return false;
+    }
+
+    // Method found -> bind, pop object, push method.
+    ObjBoundMethod *bound = newBoundMethod(peek(0), AS_CLOSURE(method));
+    pop();
+    push(OBJ_VAL(bound));
+    return true;
 }
 
 /**
@@ -219,6 +304,18 @@ static void closeUpvalues(Value *last) {
         upvalue->location = &upvalue->closed;
         vm.openUpvalues = upvalue->next;
     }
+}
+
+/**
+ * Define a method in a class. Second to last value has to be a class.
+ *
+ * @param name The name of the method.
+ */
+static void defineMethod(ObjString *name) {
+    Value method = peek(0);
+    ObjClass *klass = AS_CLASS(peek(1));
+    tableSet(&klass->methods, name, method);
+    pop();
 }
 
 /**
@@ -358,6 +455,11 @@ static InterpretResult run() {
                     break;
                 }
 
+                if (!bindMethod(instance->klass, name)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+
                 // Field does not exist.
                 runtimeError("Undefined property '%s'.", name->chars);
                 return INTERPRET_RUNTIME_ERROR;
@@ -444,6 +546,15 @@ static InterpretResult run() {
                 frame = &vm.frames[vm.frameCount - 1];
                 break;
             }
+            case OP_INVOKE: {
+                ObjString *method = READ_STRING();
+                int argCount = READ_BYTE();
+                if (!invoke(method, argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
             case OP_CLOSURE: {
                 // Take last declared constant (function declaration).
                 ObjFunction *function = AS_FUNCTION(READ_CONSTANT());
@@ -469,6 +580,9 @@ static InterpretResult run() {
             }
             case OP_CLASS:
                 push(OBJ_VAL(newClass(READ_STRING())));
+                break;
+            case OP_METHOD:
+                defineMethod(READ_STRING());
                 break;
             case OP_RETURN: {
                 // Pop the result, the last value the function left on the stack is its return.

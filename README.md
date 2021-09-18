@@ -8,7 +8,7 @@ I already read the whole book. I found it very interesting. I am planning to try
 It will take quite some time, but I have a list of features in mind. Nothing special, this is not going to be the new
 Python, I just want to learn things.
 
-Reached chapter 28
+Reached chapter 29
 
 **TO-DO**
 
@@ -126,6 +126,9 @@ Book exercises:
   operation—thanks, hash tables—but the constant factors are relatively large. This is a major component of why dynamic
   languages are slower than statically typed ones. How do sophisticated implementations of dynamically typed languages
   cope with and optimize this?
+
+- Optimize `init` method lookup. I was thinking of giving each class a structure with the overridable things, such as
+  operators etc.
 
 My own:
 

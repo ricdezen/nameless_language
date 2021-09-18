@@ -28,6 +28,7 @@ typedef struct {
     Value *stackTop;                // Pointer to stack top.
     Table globals;                  // Global variables. String names as keys, values as values.
     Table strings;                  // Hashtable containing strings, for interning.
+    ObjString *initString;          // Used to always keep the "init" string alive.
     ObjUpvalue *openUpvalues;       // List of upvalues. Must be kept sorted by stack slot index.
     Obj *objects;                   // As a temporary solution, a linked list of objects.
 

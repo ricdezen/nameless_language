@@ -1,16 +1,12 @@
-var globalSet;
-var globalGet;
+class Oops {
+  init() {
+    fun f() {
+      print "not a method";
+    }
 
-fun main() {
-  var a = "initial";
-
-  fun set() { a = "updated"; }
-  fun get() { print a; }
-
-  globalSet = set;
-  globalGet = get;
+    this.field = f;
+  }
 }
 
-main();
-globalSet();
-globalGet();
+var oops = Oops();
+oops.field();

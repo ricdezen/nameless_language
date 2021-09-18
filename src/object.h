@@ -14,6 +14,7 @@
 /**
  * Macros to check an Object's type.
  */
+#define IS_BOUND_METHOD(value)  isObjType(value, OBJ_BOUND_METHOD)
 #define IS_CLOSURE(value)       isObjType(value, OBJ_CLOSURE)
 #define IS_FUNCTION(value)      isObjType(value, OBJ_FUNCTION)
 #define IS_NATIVE(value)        isObjType(value, OBJ_NATIVE)
@@ -24,11 +25,12 @@
 /**
  * Should I repeat myself again about the shadow realm and whatnot?
  */
+#define AS_BOUND_METHOD(value)  ((ObjBoundMethod*)AS_OBJ(value))
 #define AS_CLOSURE(value)       ((ObjClosure*)AS_OBJ(value))
 #define AS_FUNCTION(value)      ((ObjFunction*)AS_OBJ(value))
 #define AS_NATIVE(value)        (((ObjNative*)AS_OBJ(value))->function)
 #define AS_CLASS(value)         ((ObjClass*)AS_OBJ(value))
-#define AS_INSTANCE(value)     ((ObjInstance*)AS_OBJ(value))
+#define AS_INSTANCE(value)      ((ObjInstance*)AS_OBJ(value))
 #define AS_STRING(value)        ((ObjString*)AS_OBJ(value))
 #define AS_C_STRING(value)      (((ObjString*)AS_OBJ(value))->chars)
 
@@ -36,6 +38,7 @@
  * First order object types.
  */
 typedef enum {
+    OBJ_BOUND_METHOD,
     OBJ_CLASS,
     OBJ_CLOSURE,
     OBJ_FUNCTION,
@@ -115,6 +118,7 @@ typedef struct {
 typedef struct {
     Obj obj;
     ObjString *name;
+    Table methods;
 } ObjClass;
 
 /**
@@ -125,6 +129,24 @@ typedef struct {
     ObjClass *klass;
     Table fields;
 } ObjInstance;
+
+/**
+ * Bound method. References the method and the object it is bound to.
+ */
+typedef struct {
+    Obj obj;
+    Value receiver;
+    ObjClosure *method;
+} ObjBoundMethod;
+
+/**
+ * Allocate a new bound method object.
+ *
+ * @param receiver The object `this` refers to in the method.
+ * @param method The method function.
+ * @return The bound method object.
+ */
+ObjBoundMethod *newBoundMethod(Value receiver, ObjClosure *method);
 
 /**
  * Allocate a new Class Object.

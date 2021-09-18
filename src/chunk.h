@@ -39,9 +39,11 @@ typedef enum {
     OP_JUMP_IF_FALSE,   // Jump if the last value on the stack is false. Takes 2-byte operand. Does not pop.
     OP_LOOP,            // Jump backwards. Takes 2-byte operand, which is how many bytes to jump backwards.
     OP_CALL,            // Call an object. Does not need to pop.
+    OP_INVOKE,          // Call a
     OP_CLOSURE,         // Make a Closure. Capture the necessary upvalues.
     OP_CLOSE_UPVALUE,   // Close over an upvalue instead of only popping it.
     OP_CLASS,           // Declare a class. Next operand is the class's name.
+    OP_METHOD,          // Declare a method. Pop last value and put it in the second to last value's methods table.
     OP_RETURN,          // Pop the value at the top of the stack.
 } OpCode;
 

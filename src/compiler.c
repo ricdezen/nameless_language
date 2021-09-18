@@ -87,6 +87,8 @@ typedef struct {
  */
 typedef enum {
     TYPE_FUNCTION,
+    TYPE_METHOD,
+    TYPE_INITIALIZER,
     TYPE_SCRIPT
 } FunctionType;
 
@@ -104,6 +106,15 @@ typedef struct Compiler {
     Upvalue upvalues[UINT8_COUNT];
     int scopeDepth;             // The depth of the scope, for local variable scope.
 } Compiler;
+
+/**
+ * Holds no particular logic, except the current class. Used cause we may want to nest classes.
+ * Notice a global variable is used, but it is only ever accessed locally, on the stack. This works due to how the
+ * compiler is made, be very careful modifying this.
+ */
+typedef struct ClassCompiler {
+    struct ClassCompiler *enclosing;
+} ClassCompiler;
 
 // Few templates to avoid errors ---
 
@@ -123,6 +134,7 @@ static uint8_t identifierConstant(Token *name);
 
 Parser parser;
 Compiler *current = NULL;
+ClassCompiler *currentClass = NULL;
 
 static Chunk *currentChunk() {
     return &current->function->chunk;
@@ -271,6 +283,13 @@ static int emitJump(uint8_t instruction) {
  */
 static void emitReturn() {
     emitByte(OP_NIL);
+
+    if (current->type == TYPE_INITIALIZER) {
+        emitTwoBytes(OP_GET_LOCAL, 0);
+    } else {
+        emitByte(OP_NIL);
+    }
+
     emitByte(OP_RETURN);
 }
 
@@ -383,8 +402,17 @@ static void initCompiler(Compiler *compiler, FunctionType type) {
     Local *local = &current->locals[current->localCount++];
     local->depth = 0;
     local->isCaptured = false;
-    local->name.start = "";
-    local->name.length = 0;
+
+    // The first slot in the stack holds an empty name,
+    // because slot 0 holds the function being called.
+    // So for a method we repurpose it to hold "this".
+    if (type != TYPE_FUNCTION) {
+        local->name.start = "this";
+        local->name.length = 4;
+    } else {
+        local->name.start = "";
+        local->name.length = 0;
+    }
 }
 
 /**
@@ -615,9 +643,16 @@ static void dot(bool canAssign) {
     uint8_t name = identifierConstant(&parser.previous);
 
     if (canAssign && match(TOKEN_EQUAL)) {
+        // Assigning to a field.
         expression();
         emitTwoBytes(OP_SET_PROPERTY, name);
+    } else if (match(TOKEN_LEFT_PAREN)) {
+        // Invoking a method directly.
+        uint8_t argCount = argumentList();
+        emitTwoBytes(OP_INVOKE, name);
+        emitByte(argCount);
     } else {
+        // Get expression, may lead to method binding.
         emitTwoBytes(OP_GET_PROPERTY, name);
     }
 }
@@ -736,7 +771,7 @@ static void namedVariable(Token name, bool canAssign) {
 }
 
 /**
- * Parse a variable's name.
+ * Parse a variable.
  *
  * @param canAssign Whether an assignment can be made.
  */
@@ -748,6 +783,19 @@ static void variable(bool canAssign) {
 #endif
 
     namedVariable(parser.previous, canAssign);
+}
+
+/**
+ * Parse `this` as a named variable you can't assign to.
+ *
+ * @param canAssign Unused.
+ */
+static void this_(bool canAssign) {
+    if (currentClass == NULL) {
+        error("Can't use 'this' outside of a class.");
+        return;
+    }
+    variable(false);
 }
 
 /**
@@ -819,7 +867,7 @@ ParseRule rules[] = {
         [TOKEN_PRINT]         = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_RETURN]        = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_SUPER]         = {NULL, NULL, PRECEDENCE_NONE},
-        [TOKEN_THIS]          = {NULL, NULL, PRECEDENCE_NONE},
+        [TOKEN_THIS]          = {this_, NULL, PRECEDENCE_NONE},
         [TOKEN_TRUE]          = {literal, NULL, PRECEDENCE_NONE},
         [TOKEN_VAR]           = {NULL, NULL, PRECEDENCE_NONE},
         [TOKEN_WHILE]         = {NULL, NULL, PRECEDENCE_NONE},
@@ -1066,18 +1114,51 @@ static void function(FunctionType type) {
 }
 
 /**
+ * Compile a method. An identifier is expected, followed by a parameter list and block.
+ */
+static void method() {
+    consume(TOKEN_IDENTIFIER, "Expect method name.");
+    uint8_t constant = identifierConstant(&parser.previous);
+
+    // Normal method by default.
+    FunctionType type = TYPE_METHOD;
+
+    // Init method.
+    if (parser.previous.length == 4 && memcmp(parser.previous.start, "init", 4) == 0) {
+        type = TYPE_INITIALIZER;
+    }
+
+    function(type);
+    emitTwoBytes(OP_METHOD, constant);
+}
+
+/**
  * Compile a Class.
  */
 static void classDeclaration() {
     consume(TOKEN_IDENTIFIER, "Expect class name.");
+    Token className = parser.previous;
     uint8_t nameConstant = identifierConstant(&parser.previous);
     declareVariable();
 
     emitTwoBytes(OP_CLASS, nameConstant);
     defineVariable(nameConstant);
 
+    ClassCompiler classCompiler;
+    classCompiler.enclosing = currentClass;
+    currentClass = &classCompiler;
+
+    namedVariable(className, false);
     consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
+
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+        method();
+    }
+
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
+    emitByte(OP_POP);
+
+    currentClass = currentClass->enclosing;
 }
 
 /**
@@ -1154,6 +1235,10 @@ static void returnStatement() {
         // Empty return.
         emitReturn();
     } else {
+        // Initializer methods cannot have a return statement.
+        if (current->type == TYPE_INITIALIZER)
+            error("Can't return a value from an initializer.");
+
         // Return something.
         expression();
         consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
