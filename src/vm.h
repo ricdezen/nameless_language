@@ -30,6 +30,13 @@ typedef struct {
     Table strings;                  // Hashtable containing strings, for interning.
     ObjUpvalue *openUpvalues;       // List of upvalues. Must be kept sorted by stack slot index.
     Obj *objects;                   // As a temporary solution, a linked list of objects.
+
+    // Temporary solution: unmanaged list of objects for garbage collection.
+    size_t bytesAllocated;
+    size_t nextGC;
+    int grayCount;
+    int grayCapacity;
+    Obj **grayStack;
 } VM;
 
 extern VM vm;

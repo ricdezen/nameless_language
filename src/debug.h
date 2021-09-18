@@ -28,4 +28,9 @@ int disassembleInstruction(Chunk *chunk, int offset);
  */
 void printToken(Token *token);
 
+/**
+ * Print the content of the stack.
+ */
+void printStack();
+
 #endif

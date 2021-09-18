@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "vm.h"
 #include "debug.h"
 #include "value.h"
 #include "object.h"
@@ -180,4 +181,18 @@ void printToken(Token *token) {
 
     // Free buffer.
     free(content);
+}
+
+void printStack() {
+    // Don't print empty stack.
+    if (vm.stack >= vm.stackTop)
+        return;
+    // Print stack content.
+    printf("          ");
+    for (Value *slot = vm.stack; slot < vm.stackTop; slot++) {
+        printf("[ ");
+        printValue(*slot);
+        printf(" ]");
+    }
+    printf("\n");
 }

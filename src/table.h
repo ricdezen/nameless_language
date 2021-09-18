@@ -97,6 +97,13 @@ void tableAddAll(Table *from, Table *to);
 ObjString *tableFindString(Table *table, const char *chars, int length, uint32_t hash);
 
 /**
+ * Remove entries with unreachable keys from a table. Meant for string interning table.
+ *
+ * @param table A Table.
+ */
+void tableRemoveWhite(Table *table);
+
+/**
  * Mark the objects in the Table as reachable.
  *
  * @param table A Table.

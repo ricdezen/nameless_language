@@ -58,7 +58,7 @@
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
 
 /**
- * Mark an Object as reachable during garbage collection.
+ * Mark an Object as reachable during garbage collection. Adds it to gray objects.
  *
  * @param object The Object to mark.
  */
@@ -66,7 +66,8 @@ void markObject(Obj *object);
 
 /**
  * Mark a Value as reachable during garbage collection. Ignores Values corresponding to Numbers, Booleans and Nil, since
- * they are not allocated on the heap.
+ * they are not allocated on the heap. An Object will be added to the "gray" objects when it is marked. It's basically
+ * the frontier of the object graph exploration.
  *
  * @param value The value to mark.
  */

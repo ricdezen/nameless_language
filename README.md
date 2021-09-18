@@ -8,7 +8,7 @@ I already read the whole book. I found it very interesting. I am planning to try
 It will take quite some time, but I have a list of features in mind. Nothing special, this is not going to be the new
 Python, I just want to learn things.
 
-Reached chapter 26.4
+Reached chapter 27
 
 **TO-DO**
 
@@ -106,6 +106,8 @@ Book exercises:
 
 - Consider whether a loop should create a new variable at each iteration or not.
 
+- Consider challenges 1, 2 and 3 of chapter 26 about GC optimization.
+
 My own:
 
 - Implement Stack, List etc. separately from the rest of the structures. Take care to make two versions of the List, one
@@ -143,6 +145,8 @@ My own:
 - Increase max control flow jump distance. Probably a set of three instructions will slightly improve speed.
 
 - I suppose the call frames array in the VM should be dynamic. This implies the stack has to be dynamic first.
+
+- The stack for gray objects in garbage collection is never reset, it can only increase in size.
 
 - There are various TODO in the code, which do not represent new features, mostly technical stuff that can probably be
   changed locally with no trouble.

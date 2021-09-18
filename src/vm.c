@@ -79,6 +79,13 @@ void initVM() {
     initTable(&vm.globals);
     initTable(&vm.strings);
 
+    // GC stuff
+    vm.grayCount = 0;
+    vm.grayCapacity = 0;
+    vm.grayStack = NULL;
+    vm.bytesAllocated = 0;
+    vm.nextGC = 1024 * 1024;
+
     // Temporary solution to define natives.
     defineNative("clock", clockNative);
 }
@@ -172,7 +179,7 @@ static ObjUpvalue *captureUpvalue(Value *local) {
     ObjUpvalue *upvalue = vm.openUpvalues;
     // Loop through the upvalues until the list is over
     // Or we found the position for the new upvalue.
-    // > can be used because values are physically in the stack.
+    // > can be used because open upvalues are physically in the stack.
     while (upvalue != NULL && upvalue->location > local) {
         prevUpvalue = upvalue;
         upvalue = upvalue->next;
@@ -213,8 +220,9 @@ static void closeUpvalues(Value *last) {
  * Concatenate the two last strings in the stack.
  */
 static void concatenate() {
-    ObjString *b = AS_STRING(pop());
-    ObjString *a = AS_STRING(pop());
+    // Instead of popping, we keep them on the stack to avoid garbage collection.
+    ObjString *b = AS_STRING(peek(0));
+    ObjString *a = AS_STRING(peek(1));
 
     int length = a->length + b->length;
     char *chars = ALLOCATE(
@@ -223,7 +231,10 @@ static void concatenate() {
     memcpy(chars + a->length, b->chars, b->length);
     chars[length] = '\0';
 
+    // Take result, pop operands, push result.
     ObjString *result = takeString(chars, length);
+    pop();
+    pop();
     push(OBJ_VAL(result));
 }
 
@@ -252,16 +263,11 @@ static InterpretResult run() {
     for (;;) {
 
 #ifdef DEBUG_TRACE_EXECUTION
-        // Print stack content.
-        printf("          ");
-        for (Value *slot = vm.stack; slot < vm.stackTop; slot++) {
-            printf("[ ");
-            printValue(*slot);
-            printf(" ]");
-        }
-        printf("\n");
+        printStack();
         // Disassemble on the fly whilst debugging.
-        disassembleInstruction(&frame->closure->function->chunk, (int)(frame->ip - frame->closure->function->chunk.code));
+        disassembleInstruction(
+                &frame->closure->function->chunk, (int) (frame->ip - frame->closure->function->chunk.code)
+        );
 #endif
 
         uint8_t instruction;
