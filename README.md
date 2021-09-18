@@ -19,7 +19,7 @@ Book exercises:
   docstring equivalent. It makes more sense not to allow nesting. C does not, I believe Java did? Mmh.~~ Whatever, I'll
   allow it.
 
-- Remove semicolons (except for loop, I guess).
+- Remove semicolons (except in `for` loop, I guess).
     - Step 1: Just remove the terminator. End of line means end of instruction.
     - Step 2: Allow multi-line instructions. An example can be to ignore line breaks after tokens that cannot end an
       expression.
