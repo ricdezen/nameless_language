@@ -27,9 +27,9 @@ typedef struct {
  * binary and, improving lookup speed by much.
  */
 typedef struct {
-    int size;
-    int capacity;
-    Entry *entries;
+    int size;       // How many entries are in the table.
+    int capacity;   // How many entries can at most be in the table.
+    Entry *entries; // Pointer to array of entries.
 } Table;
 
 /**

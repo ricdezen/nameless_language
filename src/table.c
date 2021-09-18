@@ -31,8 +31,11 @@ void freeTable(Table *table) {
  * @return The entry or the first empty one.
  */
 static Entry *findEntry(Entry *entries, int capacity, ObjString *key) {
+    // Cache capacity - 1.
+    register int last = capacity - 1;
+
     // Hash the key.
-    uint32_t index = key->hash % capacity;
+    uint32_t index = key->hash & last;
     Entry *tombstone = NULL;
 
     // Linear probe until an entry is found.
@@ -55,7 +58,7 @@ static Entry *findEntry(Entry *entries, int capacity, ObjString *key) {
             return entry;
         }
 
-        index = (index + 1) % capacity;
+        index = (index + 1) & last;
     }
 }
 
@@ -158,10 +161,13 @@ void tableAddAll(Table *from, Table *to) {
 }
 
 ObjString *tableFindString(Table *table, const char *chars, int length, uint32_t hash) {
+    // Cache capacity - 1.
+    register int last = table->capacity - 1;
+
     // Similar to a normal lookup.
     if (table->size == 0) return NULL;
 
-    uint32_t index = hash % table->capacity;
+    uint32_t index = hash & last;
     for (;;) {
         Entry *entry = &table->entries[index];
         if (entry->key == NULL) {
@@ -179,7 +185,7 @@ ObjString *tableFindString(Table *table, const char *chars, int length, uint32_t
             return entry->key;
         }
 
-        index = (index + 1) % table->capacity;
+        index = (index + 1) & last;
     }
 }
 
